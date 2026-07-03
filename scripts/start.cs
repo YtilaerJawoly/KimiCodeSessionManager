@@ -25,21 +25,13 @@ class Program
 
         try
         {
-            using (Process process = Process.Start(psi))
-            {
-                if (process != null)
-                {
-                    process.WaitForExit();
-                    return process.ExitCode;
-                }
-            }
+            Process.Start(psi);
+            return 0;
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine("启动失败: " + ex.Message);
             return 1;
         }
-
-        return 0;
     }
 }
