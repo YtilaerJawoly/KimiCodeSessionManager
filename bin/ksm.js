@@ -8,7 +8,12 @@ program
   .version('0.1.0')
   .option('-H, --home <path>', 'Kimi 主目录路径')
   .action(async (options) => {
-    await startTui({ home: options.home });
+    try {
+      await startTui({ home: options.home });
+    } catch (err) {
+      console.error(err?.message || err);
+      process.exit(1);
+    }
   });
 
 program.parse();

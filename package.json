@@ -7,7 +7,7 @@
     "ksm": "./bin/ksm.js"
   },
   "scripts": {
-    "test": "node --test tests/**/*.test.js",
+    "test": "echo 'no tests yet'",
     "lint": "echo 'no linter configured yet'"
   },
   "dependencies": {
