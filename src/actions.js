@@ -22,7 +22,7 @@ export function openKimi(args, cwd, spawner = spawn, env = process.env) {
 
     if (inWt) {
       cmd = 'wt.exe';
-      cmdArgs = ['-w', '0', 'nt', '-d', cwdResolved, 'kimi', ...args];
+      cmdArgs = ['-w', '0', 'nt', '-p', 'PowerShell', '-d', cwdResolved, 'kimi', ...args];
       options = { detached: true, stdio: 'ignore' };
     } else {
       const isWin = platform() === 'win32';

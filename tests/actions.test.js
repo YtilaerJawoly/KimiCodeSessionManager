@@ -65,7 +65,7 @@ describe('actions', () => {
     };
     await continueSession({ id: 'session_abc', projectPath: 'E:/foo' }, spawn, { WT_SESSION: 'test' });
     assert.equal(captured.cmd, 'wt.exe');
-    assert.deepEqual(captured.args, ['-w', '0', 'nt', '-d', resolve('E:/foo'), 'kimi', '-S', 'session_abc']);
+    assert.deepEqual(captured.args, ['-w', '0', 'nt', '-p', 'PowerShell', '-d', resolve('E:/foo'), 'kimi', '-S', 'session_abc']);
     assert.equal(captured.options.detached, true);
   });
 
