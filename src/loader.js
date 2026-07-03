@@ -21,6 +21,7 @@ export async function loadSessions(env = process.env) {
     } catch {
       continue;
     }
+    if (!entry.sessionDir || sessions.some(s => s.dir === entry.sessionDir)) continue;
     const state = await readState(entry.sessionDir);
     if (!state) continue;
     sessions.push(buildSession(entry, state));
@@ -33,34 +34,40 @@ export async function loadSessions(env = process.env) {
       const sessionDirs = await readdir(projectDir, { withFileTypes: true });
       for (const sd of sessionDirs.filter(d => d.isDirectory() && d.name.startsWith('session_'))) {
         const dir = join(projectDir, sd.name);
-        const id = sd.name.replace(/^session_/, '');
         if (sessions.some(s => s.dir === dir)) continue;
         const state = await readState(dir);
         if (!state) continue;
-        sessions.push(buildSession({ sessionId: id, sessionDir: dir, workDir: inferWorkDir(pd.name) }, state));
+        const entry = {
+          sessionId: sd.name,
+          sessionDir: dir,
+          workDir: inferWorkDir(pd.name),
+        };
+        sessions.push(buildSession(entry, state));
       }
     }
   } catch (err) {
     if (err.code !== 'ENOENT') throw err;
   }
 
-  return sessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  return sessions.sort((a, b) => getTime(b.updatedAt, b.createdAt) - getTime(a.updatedAt, a.createdAt));
 }
 
 async function readState(sessionDir) {
   try {
     const text = await readFile(join(sessionDir, 'state.json'), 'utf8');
     return JSON.parse(text);
-  } catch {
-    return null;
+  } catch (err) {
+    if (err.code === 'ENOENT' || err instanceof SyntaxError) return null;
+    throw err;
   }
 }
 
 function buildSession(entry, state) {
+  const projectPath = entry.workDir || basename(entry.sessionDir);
   return {
     id: entry.sessionId,
-    projectPath: entry.workDir,
-    projectName: basename(entry.workDir),
+    projectPath,
+    projectName: basename(projectPath),
     dir: entry.sessionDir,
     title: state.title || '(无标题)',
     createdAt: state.createdAt || new Date(0).toISOString(),
@@ -70,6 +77,13 @@ function buildSession(entry, state) {
 }
 
 function inferWorkDir(projectDirName) {
-  const m = projectDirName.match(/^wd_(.+)_[a-f0-9]+$/);
+  const m = projectDirName.match(/^wd_(.+?)_[a-f0-9]+$/);
   return m ? m[1] : projectDirName;
+}
+
+function getTime(iso, fallbackIso) {
+  const d = new Date(iso);
+  if (!isNaN(d.getTime())) return d.getTime();
+  const fallback = new Date(fallbackIso);
+  return !isNaN(fallback.getTime()) ? fallback.getTime() : 0;
 }

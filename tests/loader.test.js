@@ -13,7 +13,7 @@ describe('loadSessions', () => {
     writeFileSync(join(base, 'session_index.jsonl'), JSON.stringify({
       sessionId: 'session_s1',
       sessionDir: join(base, 'sessions', 'wd_works_abc123', 'session_s1'),
-      workDir: 'E:\\kimi-code\\works'
+      workDir: '/e/kimi-code/works'
     }) + '\n');
     writeFileSync(join(base, 'sessions', 'wd_works_abc123', 'session_s1', 'state.json'), JSON.stringify({
       title: 'test session',
@@ -43,6 +43,34 @@ describe('loadSessions', () => {
     }));
     const sessions = await loadSessions({ KIMI_HOME: base });
     assert.equal(sessions[0].id, 'session_s1');
-    assert.equal(sessions[1].id, 's2');
+    assert.equal(sessions[1].id, 'session_s2');
+  });
+
+  it('returns empty array when index is empty and no sessions dir exists', async () => {
+    writeFileSync(join(base, 'session_index.jsonl'), '');
+    rmSync(join(base, 'sessions'), { recursive: true, force: true });
+    const sessions = await loadSessions({ KIMI_HOME: base });
+    assert.equal(sessions.length, 0);
+  });
+
+  it('skips sessions with corrupted state.json', async () => {
+    mkdirSync(join(base, 'sessions', 'wd_works_abc123', 'session_bad'), { recursive: true });
+    writeFileSync(join(base, 'sessions', 'wd_works_abc123', 'session_bad', 'state.json'), 'not-json');
+    const sessions = await loadSessions({ KIMI_HOME: base });
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].id, 'session_s1');
+  });
+
+  it('sorts valid updatedAt before invalid updatedAt', async () => {
+    mkdirSync(join(base, 'sessions', 'wd_works_abc123', 'session_invalid'), { recursive: true });
+    writeFileSync(join(base, 'sessions', 'wd_works_abc123', 'session_invalid', 'state.json'), JSON.stringify({
+      title: 'invalid date',
+      createdAt: '2026-07-01T00:00:00.000Z',
+      updatedAt: 'not-a-date',
+      lastPrompt: 'bad'
+    }));
+    const sessions = await loadSessions({ KIMI_HOME: base });
+    assert.equal(sessions[0].id, 'session_s1');
+    assert.equal(sessions[1].id, 'session_invalid');
   });
 });
