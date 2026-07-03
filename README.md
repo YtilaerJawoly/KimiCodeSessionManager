@@ -24,6 +24,14 @@ npm link
 
 ## 使用
 
+Windows 用户可以直接双击 `start.exe` 或在终端运行 `start.ps1`：
+
+```powershell
+./start.ps1
+```
+
+命令行方式（推荐安装到 PATH 后使用）：
+
 ```bash
 ksm
 # 或指定 Kimi 主目录

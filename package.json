@@ -5,7 +5,7 @@
   "type": "module",
   "license": "MIT",
   "author": "",
-  "files": ["bin/", "src/", "README.md", "LICENSE"],
+  "files": ["bin/", "src/", "scripts/", "start.exe", "start.ps1", "README.md", "LICENSE"],
   "keywords": ["kimi", "kimi-code", "session", "manager", "cli", "tui", "resume"],
   "bin": {
     "ksm": "./bin/ksm.js"
