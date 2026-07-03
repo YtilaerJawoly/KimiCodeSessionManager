@@ -16,8 +16,14 @@ function useWindowsTerminal(env = process.env) {
 
 function getProjectName(projectPath, explicitName) {
   if (explicitName) return explicitName;
-  const parts = projectPath.replace(/\\/g, '/').split('/').filter(Boolean);
-  return parts[parts.length - 1] || projectPath;
+  const normalized = projectPath.replace(/\\/g, '/');
+  const parts = normalized.split('/').filter(Boolean);
+  const folderName = parts[parts.length - 1] || projectPath;
+  // 如果工作目录是类似 E:/kimi-code/noveland，返回父文件夹名（kimi-code）
+  if (parts.length >= 2) {
+    return parts[parts.length - 2] || folderName;
+  }
+  return folderName;
 }
 
 export function openKimi(args, cwd, projectName, spawner = spawn, env = process.env) {
