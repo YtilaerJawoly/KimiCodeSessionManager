@@ -24,6 +24,50 @@ describe('buildProjects', () => {
     assert.equal(projects[0].name, 'a');
     assert.equal(projects[1].name, 'b');
   });
+
+  it('returns empty array for empty sessions', () => {
+    const projects = buildProjects([]);
+    assert.equal(projects.length, 0);
+  });
+
+  it('handles a single project with a single session', () => {
+    const projects = buildProjects([
+      { id: 'session_only', projectPath: '/e/only', projectName: 'only', updatedAt: '2026-07-01T00:00:00.000Z' },
+    ]);
+    assert.equal(projects.length, 1);
+    assert.equal(projects[0].name, 'only');
+    assert.equal(projects[0].sessions.length, 1);
+    assert.equal(projects[0].sessions[0].id, 'session_only');
+    assert.equal(projects[0].sessionCount, 1);
+    assert.equal(projects[0].lastUpdated, '2026-07-01T00:00:00.000Z');
+  });
+
+  it('uses id as stable tie-breaker when updatedAt is equal', () => {
+    const projects = buildProjects([
+      { id: 'session_b', projectPath: '/e/a', projectName: 'a', updatedAt: '2026-07-01T00:00:00.000Z' },
+      { id: 'session_a', projectPath: '/e/a', projectName: 'a', updatedAt: '2026-07-01T00:00:00.000Z' },
+    ]);
+    assert.equal(projects[0].sessions[0].id, 'session_a');
+    assert.equal(projects[0].sessions[1].id, 'session_b');
+  });
+
+  it('sorts invalid updatedAt before valid updatedAt', () => {
+    const projects = buildProjects([
+      { id: 'session_bad', projectPath: '/e/a', projectName: 'a', updatedAt: 'not-a-date' },
+      { id: 'session_good', projectPath: '/e/a', projectName: 'a', updatedAt: '2026-07-01T00:00:00.000Z' },
+    ]);
+    assert.equal(projects[0].sessions[0].id, 'session_good');
+    assert.equal(projects[0].sessions[1].id, 'session_bad');
+  });
+
+  it('does not throw when updatedAt is missing', () => {
+    const projects = buildProjects([
+      { id: 'session_missing', projectPath: '/e/a', projectName: 'a' },
+    ]);
+    assert.equal(projects.length, 1);
+    assert.equal(projects[0].sessions.length, 1);
+    assert.equal(projects[0].sessions[0].id, 'session_missing');
+  });
 });
 
 describe('getLatestSession', () => {

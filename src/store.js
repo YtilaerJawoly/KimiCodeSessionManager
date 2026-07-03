@@ -1,3 +1,15 @@
+function dateOrMin(iso) {
+  const time = new Date(iso).getTime();
+  return Number.isFinite(time) ? time : -Infinity;
+}
+
+function compareDate(aIso, bIso, tieA, tieB) {
+  const a = dateOrMin(aIso);
+  const b = dateOrMin(bIso);
+  if (a !== b) return b - a;
+  return tieA.localeCompare(tieB);
+}
+
 export function buildProjects(sessions) {
   const map = new Map();
   for (const s of sessions) {
@@ -13,13 +25,17 @@ export function buildProjects(sessions) {
 
   const projects = [];
   for (const p of map.values()) {
-    p.sessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    p.sessions.sort((a, b) =>
+      compareDate(a.updatedAt, b.updatedAt, a.id, b.id)
+    );
     p.lastUpdated = p.sessions[0].updatedAt;
     p.sessionCount = p.sessions.length;
     projects.push(p);
   }
 
-  return projects.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+  return projects.sort((a, b) =>
+    compareDate(a.lastUpdated, b.lastUpdated, a.path, b.path)
+  );
 }
 
 export function getLatestSession(project) {
