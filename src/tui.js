@@ -6,7 +6,24 @@ import { buildProjects, getLatestSession, findProjectByPath } from './store.js';
 import { continueSession, createSession } from './actions.js';
 import { deleteSession, archiveSession } from './cleanup.js';
 
+const NAME_WIDTH = 22;
+const PATH_WIDTH = 42;
 const FUSE_OPTIONS = { keys: ['name', 'path'], threshold: 0.4 };
+
+function padEnd(str, width) {
+  const len = stringWidth(str);
+  if (len >= width) return str;
+  return str + ' '.repeat(width - len);
+}
+
+function stringWidth(str) {
+  let width = 0;
+  for (const char of str) {
+    const code = char.codePointAt(0);
+    width += (code >= 0x4e00 && code <= 0x9fff) ? 2 : 1;
+  }
+  return width;
+}
 
 export async function startTui(options = {}) {
   try {
@@ -26,11 +43,16 @@ export async function startTui(options = {}) {
       source: (input = '') => {
         const term = input.trim();
         const results = term ? fuse.search(term).map(r => r.item) : projects;
-        return results.map(p => ({
-          name: `${truncate(p.name, 20)}  ${chalk.gray(truncate(p.path, 40))}  ${chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`)}`,
-          value: p.path,
-          description: `最新: ${truncate(getLatestSession(p).title, 60)}`,
-        }));
+        return results.map(p => {
+          const name = truncate(p.name, 20);
+          const path = chalk.gray(truncate(p.path, PATH_WIDTH - 2));
+          const meta = chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`);
+          return {
+            name: `${padEnd(name, NAME_WIDTH)}${padEnd(path, PATH_WIDTH)}${meta}`,
+            value: p.path,
+            description: `最新: ${truncate(getLatestSession(p).title, 60)}`,
+          };
+        });
       },
     });
 
