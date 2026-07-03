@@ -1,5 +1,6 @@
-import { select } from '@inquirer/prompts';
+import { select, search } from '@inquirer/prompts';
 import chalk from 'chalk';
+import Fuse from 'fuse.js';
 import { loadSessions } from './loader.js';
 import { buildProjects, getLatestSession, findProjectByPath } from './store.js';
 import { continueSession, createSession } from './actions.js';
@@ -16,16 +17,18 @@ export async function startTui(options = {}) {
       return;
     }
 
-    const choices = projects.map(p => ({
-      name: `${truncate(p.name, 20)}  ${chalk.gray(truncate(p.path, 40))}  ${chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`)}`,
-      value: p.path,
-      description: `最新: ${truncate(getLatestSession(p).title, 60)}`,
-    }));
+    const fuse = new Fuse(projects, { keys: ['name', 'path'], threshold: 0.4 });
 
-    const selectedPath = await select({
-      message: '选择一个项目继续最新会话：',
-      choices,
-      pageSize: 15,
+    const selectedPath = await search({
+      message: '搜索并选择一个项目继续最新会话：',
+      source: (input = '') => {
+        const results = input ? fuse.search(input).map(r => r.item) : projects;
+        return results.map(p => ({
+          name: `${truncate(p.name, 20)}  ${chalk.gray(truncate(p.path, 40))}  ${chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`)}`,
+          value: p.path,
+          description: `最新: ${truncate(getLatestSession(p).title, 60)}`,
+        }));
+      },
     });
 
     const project = findProjectByPath(projects, selectedPath);
