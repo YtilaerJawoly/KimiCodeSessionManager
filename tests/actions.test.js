@@ -1,12 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { platform } from 'node:os';
 import { continueSession, createSession, openKimi } from '../src/actions.js';
 
-const isWin = platform() === 'win32';
-
-function makeMockSpawn({ exitCode = null, delay = 0, error = null } = {}) {
+function makeMockSpawn({ error = null } = {}) {
   return (cmd, args, options) => {
     const child = new EventEmitter();
     child.unref = () => {};
@@ -14,8 +11,6 @@ function makeMockSpawn({ exitCode = null, delay = 0, error = null } = {}) {
       child.emit('spawn');
       if (error) {
         child.emit('error', error);
-      } else if (exitCode !== null) {
-        setTimeout(() => child.emit('exit', exitCode), delay);
       }
     });
     return child;
@@ -27,24 +22,33 @@ describe('actions', () => {
     let captured;
     const spawn = (cmd, args, options) => {
       captured = { cmd, args, options };
-      return makeMockSpawn({ delay: 600 })();
+      return makeMockSpawn()();
     };
     await continueSession({ id: 'session_abc', projectPath: '/e/foo' }, spawn);
+    assert.equal(captured.cmd, 'kimi');
     assert.equal(captured.args.includes('-S'), true);
     assert.equal(captured.args.includes('session_abc'), true);
     assert.equal(captured.options.cwd, '/e/foo');
-    assert.equal(captured.cmd, isWin ? 'cmd' : 'kimi');
+    assert.equal(captured.options.detached, true);
   });
 
   it('createSession passes correct args and cwd', async () => {
     let captured;
     const spawn = (cmd, args, options) => {
       captured = { cmd, args, options };
-      return makeMockSpawn({ delay: 600 })();
+      return makeMockSpawn()();
     };
     await createSession('/e/bar', spawn);
-    assert.deepEqual(captured.args, isWin ? ['/c', 'start', '', 'kimi'] : []);
+    assert.equal(captured.cmd, 'kimi');
+    assert.deepEqual(captured.args, []);
     assert.equal(captured.options.cwd, '/e/bar');
+    assert.equal(captured.options.detached, true);
+  });
+
+  it('resolves immediately on spawn', async () => {
+    const spawn = makeMockSpawn();
+    const child = await openKimi(['-S', 'session_abc'], '/e/foo', spawn);
+    assert.ok(child);
   });
 
   it('rejects on spawn error', async () => {
@@ -59,14 +63,4 @@ describe('actions', () => {
       /无法启动 Kimi Code/
     );
   });
-
-  if (!isWin) {
-    it('rejects on immediate non-zero exit', async () => {
-      const spawn = makeMockSpawn({ exitCode: 1, delay: 10 });
-      await assert.rejects(
-        () => openKimi(['-S', 'session_bad'], '/e/foo', spawn),
-        /退出码/
-      );
-    });
-  }
 });

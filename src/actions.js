@@ -12,49 +12,28 @@ export function createSession(projectPath, spawner) {
 export function openKimi(args, cwd, spawner = spawn) {
   return new Promise((resolve, reject) => {
     const isWin = platform() === 'win32';
-    const cmd = isWin ? 'cmd' : 'kimi';
-    const cmdArgs = isWin ? ['/c', 'start', '', 'kimi', ...args] : args;
+    const cmd = 'kimi';
+    const cmdArgs = args;
 
-    const child = spawner(cmd, cmdArgs, { cwd, detached: !isWin, stdio: 'ignore' });
+    const child = spawner(cmd, cmdArgs, {
+      cwd,
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: isWin,
+    });
     let settled = false;
 
-    const fail = (msg) => {
+    child.on('error', (err) => {
       if (settled) return;
       settled = true;
-      reject(new Error(`无法启动 Kimi Code (${cmd} ${cmdArgs.join(' ')}): ${msg}`));
-    };
-
-    child.on('error', (err) => fail(err.message));
+      reject(new Error(`无法启动 Kimi Code (${cmd} ${cmdArgs.join(' ')}): ${err.message}`));
+    });
 
     child.on('spawn', () => {
-      if (isWin) {
-        if (!settled) {
-          settled = true;
-          child.unref();
-          resolve(child);
-        }
-      } else {
-        const timer = setTimeout(() => {
-          if (settled) return;
-          settled = true;
-          child.unref();
-          resolve(child);
-        }, 500);
-
-        child.on('exit', (code) => {
-          if (settled) return;
-          if (code === 0) {
-            settled = true;
-            clearTimeout(timer);
-            child.unref();
-            resolve(child);
-          } else if (code !== 0) {
-            settled = true;
-            clearTimeout(timer);
-            reject(new Error(`Kimi Code 进程异常退出，退出码：${code}`));
-          }
-        });
-      }
+      if (settled) return;
+      settled = true;
+      child.unref();
+      resolve(child);
     });
   });
 }
