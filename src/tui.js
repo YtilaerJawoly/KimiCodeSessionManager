@@ -41,6 +41,8 @@ export async function startTui(options = {}) {
     }
 
     await projectMenu(project, env);
+    // 项目菜单返回后，重新进入项目选择循环
+    await startTui(options);
   } catch (err) {
     if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
       return;
@@ -60,27 +62,27 @@ async function projectMenu(project, env) {
     { name: '返回', value: 'back' },
   ];
 
-  const action = await select({ message: `${project.name} — 选择操作：`, choices });
+  while (true) {
+    const action = await select({ message: `${project.name} — 选择操作：`, choices });
 
-  switch (action) {
-    case 'continue-latest':
-      await continueSession(latest);
-      break;
-    case 'history':
-      await historyMenu(project);
-      break;
-    case 'new':
-      await createSession(project.path);
-      break;
-    case 'cleanup':
-      await cleanupMenu(project, env);
-      break;
-    case 'back':
-    default:
-      return;
+    switch (action) {
+      case 'continue-latest':
+        await continueSession(latest);
+        break;
+      case 'history':
+        await historyMenu(project);
+        break;
+      case 'new':
+        await createSession(project.path);
+        break;
+      case 'cleanup':
+        await cleanupMenu(project, env);
+        break;
+      case 'back':
+      default:
+        return;
+    }
   }
-
-  await projectMenu(project, env);
 }
 
 async function historyMenu(project) {
