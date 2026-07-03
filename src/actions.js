@@ -1,28 +1,55 @@
 import { spawn } from 'node:child_process';
 import { platform } from 'node:os';
 
-export function continueSession(session) {
-  return openKimi(['-S', session.id], session.projectPath);
+export function continueSession(session, spawner) {
+  return openKimi(['-S', session.id], session.projectPath, spawner);
 }
 
-export function createSession(projectPath) {
-  return openKimi([], projectPath);
+export function createSession(projectPath, spawner) {
+  return openKimi([], projectPath, spawner);
 }
 
-function openKimi(args, cwd) {
+export function openKimi(args, cwd, spawner = spawn) {
   return new Promise((resolve, reject) => {
     const isWin = platform() === 'win32';
-    let cmd, cmdArgs;
-    if (isWin) {
-      // 使用 start 让 Kimi Code 在新窗口/标签页中打开，并脱离当前终端
-      cmd = 'cmd';
-      cmdArgs = ['/c', 'start', '', 'kimi', ...args];
-    } else {
-      cmd = 'kimi';
-      cmdArgs = args;
-    }
-    const child = spawn(cmd, cmdArgs, { cwd, detached: !isWin, stdio: 'ignore' });
-    child.on('error', reject);
-    child.on('spawn', () => resolve(child));
+    const cmd = isWin ? 'cmd' : 'kimi';
+    const cmdArgs = isWin ? ['/c', 'start', '', 'kimi', ...args] : args;
+
+    const child = spawner(cmd, cmdArgs, { cwd, detached: !isWin, stdio: 'ignore' });
+    let settled = false;
+
+    const fail = (msg) => {
+      if (settled) return;
+      settled = true;
+      reject(new Error(`无法启动 Kimi Code (${cmd} ${cmdArgs.join(' ')}): ${msg}`));
+    };
+
+    child.on('error', (err) => fail(err.message));
+
+    child.on('spawn', () => {
+      if (isWin) {
+        if (!settled) {
+          settled = true;
+          child.unref();
+          resolve(child);
+        }
+      } else {
+        const timer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          child.unref();
+          resolve(child);
+        }, 500);
+
+        child.on('exit', (code) => {
+          if (settled) return;
+          if (code !== 0) {
+            settled = true;
+            clearTimeout(timer);
+            reject(new Error(`Kimi Code 进程异常退出，退出码：${code}`));
+          }
+        });
+      }
+    });
   });
 }
