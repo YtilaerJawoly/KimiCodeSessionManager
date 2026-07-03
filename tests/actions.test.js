@@ -65,7 +65,11 @@ describe('actions', () => {
     };
     await continueSession({ id: 'session_abc', projectPath: 'E:/foo' }, spawn, { WT_SESSION: 'test' });
     assert.equal(captured.cmd, 'wt.exe');
-    assert.deepEqual(captured.args, ['-w', '0', 'nt', '-p', 'PowerShell', '-d', resolve('E:/foo'), '--title', 'foo', 'kimi', '-S', 'session_abc']);
+    assert.deepEqual(captured.args.slice(0, 10), ['-w', '0', 'nt', '-p', 'PowerShell', '-d', resolve('E:/foo'), '--title', 'foo', 'powershell']);
+    assert.equal(captured.args[10], '-Command');
+    assert.equal(typeof captured.args[11], 'string');
+    assert.ok(captured.args[11].includes("$Host.UI.RawUI.WindowTitle='foo'"));
+    assert.ok(captured.args[11].includes('kimi'));
     assert.equal(captured.options.detached, true);
   });
 

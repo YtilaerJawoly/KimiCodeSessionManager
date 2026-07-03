@@ -30,7 +30,7 @@ export function openKimi(args, cwd, projectName, spawner = spawn, env = process.
 
     if (inWt) {
       cmd = 'wt.exe';
-      cmdArgs = ['-w', '0', 'nt', '-p', 'PowerShell', '-d', cwdResolved, '--title', title, 'kimi', ...args];
+      cmdArgs = ['-w', '0', 'nt', '-p', 'PowerShell', '-d', cwdResolved, '--title', title, 'powershell', '-Command', buildPowerShellCommand(cwdResolved, title, args)];
       options = { detached: true, stdio: 'ignore' };
     } else {
       const isWin = platform() === 'win32';
@@ -55,4 +55,11 @@ export function openKimi(args, cwd, projectName, spawner = spawn, env = process.
       resolve(child);
     });
   });
+}
+
+function buildPowerShellCommand(cwd, title, args) {
+  const safeCwd = cwd.replace(/'/g, "''");
+  const safeTitle = title.replace(/'/g, "''");
+  const safeArgs = args.map(a => a.replace(/'/g, "''")).join(' ');
+  return `Set-Location '${safeCwd}'; Start-Sleep -Seconds 2; $Host.UI.RawUI.WindowTitle='${safeTitle}'; Start-Process -Wait -FilePath 'kimi' -ArgumentList '${safeArgs}'`;
 }
