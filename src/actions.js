@@ -43,7 +43,12 @@ export function openKimi(args, cwd, spawner = spawn) {
 
         child.on('exit', (code) => {
           if (settled) return;
-          if (code !== 0) {
+          if (code === 0) {
+            settled = true;
+            clearTimeout(timer);
+            child.unref();
+            resolve(child);
+          } else if (code !== 0) {
             settled = true;
             clearTimeout(timer);
             reject(new Error(`Kimi Code 进程异常退出，退出码：${code}`));

@@ -132,6 +132,15 @@ async function cleanupMenu(project, env) {
     }
   }
   console.log(chalk.green(`已${mode === 'delete' ? '删除' : '归档'} ${ids.length} 个会话。`));
+
+  const sessions = await loadSessions(env);
+  const projects = buildProjects(sessions);
+  const newProject = findProjectByPath(projects, project.path);
+  if (newProject && newProject.sessions.length > 0) {
+    await projectMenu(newProject, env);
+  } else {
+    console.log(chalk.yellow('该项目已无会话，返回主界面。'));
+  }
 }
 
 function truncate(str, max) {
