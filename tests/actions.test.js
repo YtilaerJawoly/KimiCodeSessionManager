@@ -2,7 +2,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { platform } from 'node:os';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { readFile, unlink } from 'node:fs/promises';
 import { continueSession, createSession, openKimi } from '../src/actions.js';
 
 const isWin = platform() === 'win32';
@@ -66,11 +67,16 @@ describe('actions', () => {
     await continueSession({ id: 'session_abc', projectPath: 'E:/foo' }, spawn, { WT_SESSION: 'test' });
     assert.equal(captured.cmd, 'wt.exe');
     assert.deepEqual(captured.args.slice(0, 10), ['-w', '0', 'nt', '-p', 'PowerShell', '-d', resolve('E:/foo'), '--title', 'foo', 'powershell']);
-    assert.equal(captured.args[10], '-Command');
-    assert.equal(typeof captured.args[11], 'string');
-    assert.ok(captured.args[11].includes("$Host.UI.RawUI.WindowTitle='foo'"));
-    assert.ok(captured.args[11].includes('kimi'));
+    assert.equal(captured.args[10], '-ExecutionPolicy');
+    assert.equal(captured.args[11], 'Bypass');
+    assert.equal(captured.args[12], '-File');
+    assert.equal(typeof captured.args[13], 'string');
+    const scriptPath = captured.args[13];
+    const script = await readFile(scriptPath, 'utf8');
+    assert.ok(script.includes("$Host.UI.RawUI.WindowTitle = 'foo'"));
+    assert.ok(script.includes("\u0026 'kimi' '-S' 'session_abc'"));
     assert.equal(captured.options.detached, true);
+    await unlink(scriptPath).catch(() => {});
   });
 
   it('rejects on spawn error', async () => {
