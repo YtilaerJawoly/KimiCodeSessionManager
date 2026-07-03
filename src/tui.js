@@ -6,6 +6,8 @@ import { buildProjects, getLatestSession, findProjectByPath } from './store.js';
 import { continueSession, createSession } from './actions.js';
 import { deleteSession, archiveSession } from './cleanup.js';
 
+const FUSE_OPTIONS = { keys: ['name', 'path'], threshold: 0.4 };
+
 export async function startTui(options = {}) {
   try {
     const env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
@@ -17,12 +19,13 @@ export async function startTui(options = {}) {
       return;
     }
 
-    const fuse = new Fuse(projects, { keys: ['name', 'path'], threshold: 0.4 });
+    const fuse = new Fuse(projects, FUSE_OPTIONS);
 
     const selectedPath = await search({
       message: '搜索并选择一个项目继续最新会话：',
       source: (input = '') => {
-        const results = input ? fuse.search(input).map(r => r.item) : projects;
+        const term = input.trim();
+        const results = term ? fuse.search(term).map(r => r.item) : projects;
         return results.map(p => ({
           name: `${truncate(p.name, 20)}  ${chalk.gray(truncate(p.path, 40))}  ${chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`)}`,
           value: p.path,
