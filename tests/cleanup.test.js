@@ -32,4 +32,19 @@ describe('cleanup', () => {
     const index = readFileSync(join(base, 'session_index.jsonl'), 'utf8');
     assert.equal(index.trim(), '');
   });
+
+  it('deletes session when index file does not exist', async () => {
+    const session = { id: 'session_s1', dir: join(base, 'sessions', 'wd_a_abc', 'session_s1'), projectName: 'a' };
+    rmSync(join(base, 'session_index.jsonl'), { force: true });
+    await deleteSession(session, { KIMI_HOME: base });
+    assert.equal(existsSync(session.dir), false);
+  });
+
+  it('throws clear error when archiving non-existent session dir', async () => {
+    const session = { id: 'session_missing', dir: join(base, 'sessions', 'missing'), projectName: 'a' };
+    await assert.rejects(
+      async () => archiveSession(session, { KIMI_HOME: base }),
+      /会话目录不存在|归档会话失败/
+    );
+  });
 });

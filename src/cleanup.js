@@ -1,19 +1,33 @@
-import { rename, rm, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { rename, rm, readFile, writeFile, mkdir, access, constants } from 'node:fs/promises';
 import { join } from 'node:path';
 import { getPaths } from './config.js';
 
 export async function deleteSession(session, env = process.env) {
   const { indexFile } = getPaths(env);
-  await rm(session.dir, { recursive: true, force: true });
-  await removeFromIndex(indexFile, session.id);
+  try {
+    await rm(session.dir, { recursive: true, force: true });
+    await removeFromIndex(indexFile, session.id);
+  } catch (err) {
+    throw new Error(`删除会话失败：${err.message}`);
+  }
 }
 
 export async function archiveSession(session, env = process.env) {
   const { archiveDir, indexFile } = getPaths(env);
-  await mkdir(archiveDir, { recursive: true });
-  const dest = join(archiveDir, `${session.projectName}_${session.id}`);
-  await rename(session.dir, dest);
-  await removeFromIndex(indexFile, session.id);
+  try {
+    try {
+      await access(session.dir, constants.F_OK);
+    } catch {
+      throw new Error(`归档失败：会话目录不存在 ${session.dir}`);
+    }
+    await mkdir(archiveDir, { recursive: true });
+    const dest = join(archiveDir, `${session.projectName}_${session.id}`);
+    await rename(session.dir, dest);
+    await removeFromIndex(indexFile, session.id);
+  } catch (err) {
+    if (err.message.startsWith('归档失败：会话目录不存在')) throw err;
+    throw new Error(`归档会话失败：${err.message}`);
+  }
 }
 
 async function removeFromIndex(indexFile, sessionId) {
