@@ -6,35 +6,48 @@ import { continueSession, createSession } from './actions.js';
 import { deleteSession, archiveSession } from './cleanup.js';
 
 export async function startTui(options = {}) {
-  const env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
-  const sessions = await loadSessions(env);
-  const projects = buildProjects(sessions);
+  try {
+    const env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
+    const sessions = await loadSessions(env);
+    const projects = buildProjects(sessions);
 
-  if (projects.length === 0) {
-    console.log(chalk.yellow('未找到任何 Kimi 会话。'));
-    return;
+    if (projects.length === 0) {
+      console.log(chalk.yellow('未找到任何 Kimi 会话。'));
+      return;
+    }
+
+    const choices = projects.map(p => ({
+      name: `${truncate(p.name, 20)}  ${chalk.gray(truncate(p.path, 40))}  ${chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`)}`,
+      value: p.path,
+      description: `最新: ${truncate(getLatestSession(p).title, 60)}`,
+    }));
+
+    const selectedPath = await select({
+      message: '选择一个项目继续最新会话：',
+      choices,
+      pageSize: 15,
+    });
+
+    const project = findProjectByPath(projects, selectedPath);
+    if (!project) {
+      console.warn(chalk.yellow('未找到选择的项目。'));
+      return;
+    }
+
+    await projectMenu(project, env);
+  } catch (err) {
+    if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
+      return;
+    }
+    console.error(chalk.red(`错误：${err?.message || err}`));
+    process.exit(1);
   }
-
-  const choices = projects.map(p => ({
-    name: `${p.name}  ${chalk.gray(p.path)}  ${chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`)}`,
-    value: p.path,
-    description: `最新: ${getLatestSession(p).title}`,
-  }));
-
-  const selectedPath = await select({
-    message: '选择一个项目继续最新会话：',
-    choices,
-    pageSize: 15,
-  });
-
-  const project = findProjectByPath(projects, selectedPath);
-  await projectMenu(project, env);
 }
 
 async function projectMenu(project, env) {
   const latest = getLatestSession(project);
   const choices = [
-    { name: `继续最新会话: ${latest.title}`, value: 'continue-latest' },
+    { name: `继续最新会话: ${truncate(latest.title, 40)}`, value: 'continue-latest' },
     { name: '查看该项目的历史会话', value: 'history' },
     { name: '为此项目新建会话', value: 'new' },
     { name: '清理/归档旧会话', value: 'cleanup' },
@@ -60,13 +73,15 @@ async function projectMenu(project, env) {
     default:
       return;
   }
+
+  await projectMenu(project, env);
 }
 
 async function historyMenu(project) {
   const choices = project.sessions.map(s => ({
-    name: `${s.title}  ${chalk.gray(formatTime(s.updatedAt))}`,
+    name: `${truncate(s.title, 40)}  ${chalk.gray(formatTime(s.updatedAt))}`,
     value: s.id,
-    description: s.lastPrompt.slice(0, 80),
+    description: (s.lastPrompt || '').slice(0, 80),
   }));
   choices.push({ name: '返回', value: 'back' });
 
@@ -79,7 +94,7 @@ async function historyMenu(project) {
 async function cleanupMenu(project, env) {
   const { checkbox } = await import('@inquirer/prompts');
   const choices = project.sessions.map(s => ({
-    name: `${s.title}  ${chalk.gray(formatTime(s.updatedAt))}`,
+    name: `${truncate(s.title, 40)}  ${chalk.gray(formatTime(s.updatedAt))}`,
     value: s.id,
     checked: false,
   }));
@@ -107,10 +122,16 @@ async function cleanupMenu(project, env) {
         await archiveSession(session, env);
       }
     } catch (err) {
-      console.error(chalk.red(`处理 ${session.title} 失败：${err.message}`));
+      console.error(chalk.red(`处理 ${truncate(session.title, 40)} 失败：${err.message}`));
     }
   }
   console.log(chalk.green(`已${mode === 'delete' ? '删除' : '归档'} ${ids.length} 个会话。`));
+}
+
+function truncate(str, max) {
+  const safe = str || '';
+  if (safe.length <= max) return safe;
+  return safe.slice(0, max - 1) + '…';
 }
 
 function formatTime(iso) {
