@@ -73,7 +73,7 @@ async function projectMenu(project, env) {
         await historyMenu(project);
         break;
       case 'new':
-        await createSession(project.path);
+        await createSession(project.path, project.name);
         break;
       case 'cleanup':
         await cleanupMenu(project, env);
@@ -96,7 +96,7 @@ async function historyMenu(project) {
   const sid = await select({ message: '选择要继续的历史会话：', choices, pageSize: 15 });
   if (sid === 'back') return;
   const session = project.sessions.find(s => s.id === sid);
-  if (session) await continueSession(session);
+  await continueSession({ ...session, projectName: project.name });
 }
 
 async function cleanupMenu(project, env) {

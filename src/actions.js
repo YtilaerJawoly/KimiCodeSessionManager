@@ -3,26 +3,33 @@ import { platform } from 'node:os';
 import { resolve as pathResolve } from 'node:path';
 
 export function continueSession(session, spawner, env = process.env) {
-  return openKimi(['-S', session.id], session.projectPath, spawner, env);
+  return openKimi(['-S', session.id], session.projectPath, session.projectName, spawner, env);
 }
 
-export function createSession(projectPath, spawner, env = process.env) {
-  return openKimi([], projectPath, spawner, env);
+export function createSession(projectPath, projectName, spawner, env = process.env) {
+  return openKimi([], projectPath, projectName, spawner, env);
 }
 
 function useWindowsTerminal(env = process.env) {
   return platform() === 'win32' && !!env.WT_SESSION;
 }
 
-export function openKimi(args, cwd, spawner = spawn, env = process.env) {
+function getProjectName(projectPath, explicitName) {
+  if (explicitName) return explicitName;
+  const parts = projectPath.replace(/\\/g, '/').split('/').filter(Boolean);
+  return parts[parts.length - 1] || projectPath;
+}
+
+export function openKimi(args, cwd, projectName, spawner = spawn, env = process.env) {
   return new Promise((resolve, reject) => {
     const inWt = useWindowsTerminal(env);
     const cwdResolved = pathResolve(cwd);
+    const title = getProjectName(cwdResolved, projectName);
     let cmd, cmdArgs, options;
 
     if (inWt) {
       cmd = 'wt.exe';
-      cmdArgs = ['-w', '0', 'nt', '-p', 'PowerShell', '-d', cwdResolved, 'kimi', ...args];
+      cmdArgs = ['-w', '0', 'nt', '-p', 'PowerShell', '-d', cwdResolved, '--title', title, 'kimi', ...args];
       options = { detached: true, stdio: 'ignore' };
     } else {
       const isWin = platform() === 'win32';

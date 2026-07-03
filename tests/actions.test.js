@@ -43,7 +43,7 @@ describe('actions', () => {
       captured = { cmd, args, options };
       return makeMockSpawn()();
     };
-    await createSession('E:/bar', spawn, {});
+    await createSession('E:/bar', 'bar', spawn, {});
     assert.equal(captured.cmd, 'kimi');
     assert.deepEqual(captured.args, []);
     assert.equal(captured.options.cwd, resolve('E:/bar'));
@@ -52,7 +52,7 @@ describe('actions', () => {
 
   it('resolves immediately on spawn', async () => {
     const spawn = makeMockSpawn();
-    const child = await openKimi(['-S', 'session_abc'], 'E:/foo', spawn, {});
+    const child = await openKimi(['-S', 'session_abc'], 'E:/foo', 'foo', spawn, {});
     assert.ok(child);
   });
 
@@ -65,14 +65,14 @@ describe('actions', () => {
     };
     await continueSession({ id: 'session_abc', projectPath: 'E:/foo' }, spawn, { WT_SESSION: 'test' });
     assert.equal(captured.cmd, 'wt.exe');
-    assert.deepEqual(captured.args, ['-w', '0', 'nt', '-p', 'PowerShell', '-d', resolve('E:/foo'), 'kimi', '-S', 'session_abc']);
+    assert.deepEqual(captured.args, ['-w', '0', 'nt', '-p', 'PowerShell', '-d', resolve('E:/foo'), '--title', 'foo', 'kimi', '-S', 'session_abc']);
     assert.equal(captured.options.detached, true);
   });
 
   it('rejects on spawn error', async () => {
     const spawn = makeMockSpawn({ error: new Error('spawn failed') });
     await assert.rejects(
-      () => openKimi(['-S', 'session_bad'], 'E:/foo', spawn, {}),
+      () => openKimi(['-S', 'session_bad'], 'E:/foo', 'foo', spawn, {}),
       /无法启动 Kimi Code/
     );
   });
