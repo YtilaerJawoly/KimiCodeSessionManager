@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { select, search } from '@inquirer/prompts';
 import chalk from 'chalk';
 import Fuse from 'fuse.js';
@@ -10,6 +14,43 @@ const NAME_WIDTH = 22;
 const PATH_WIDTH = 42;
 const FUSE_OPTIONS = { keys: ['name', 'path'], threshold: 0.4 };
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
+
+function printWelcome(kimiVersion) {
+  const title = `Kimi Code Session Manager ${pkg.version}`;
+  const width = 80;
+  const line = (text) => {
+    const pad = width - stringWidth(text);
+    return '│' + text + ' '.repeat(Math.max(0, pad)) + '│';
+  };
+  const border = '╭' + '─'.repeat(width) + '╮';
+  const bottom = '╰' + '─'.repeat(width) + '╯';
+  console.log(chalk.hex('#4A90E2')(border));
+  console.log(chalk.hex('#4A90E2')(line('')));
+  console.log(chalk.hex('#4A90E2')(line(`  ▐█▛█▛█▌  ${title}`)));
+  console.log(chalk.hex('#4A90E2')(line(`  ▐█████▌  Kimi Code: ${kimiVersion || 'unknown'}`)));
+  console.log(chalk.hex('#4A90E2')(line('')));
+  console.log(chalk.hex('#4A90E2')(bottom));
+  console.log();
+}
+
+function getKimiVersion(env = process.env) {
+  const home = env.KIMI_HOME || homedir();
+  const files = ['version.json', 'latest.json'];
+  for (const file of files) {
+    try {
+      const text = readFileSync(join(home, 'updates', file), 'utf8');
+      const data = JSON.parse(text);
+      const version = data.version || data.current || data.latest || data.manifest?.version;
+      if (version) return version;
+    } catch {
+      // try next file
+    }
+  }
+  return '';
+}
+
 function padEnd(str, width) {
   const len = stringWidth(str);
   if (len >= width) return str;
@@ -18,7 +59,7 @@ function padEnd(str, width) {
 
 function stringWidth(str) {
   let width = 0;
-  for (const char of str) {
+  for (const char of String(str)) {
     const code = char.codePointAt(0);
     width += (code >= 0x4e00 && code <= 0x9fff) ? 2 : 1;
   }
@@ -28,6 +69,7 @@ function stringWidth(str) {
 export async function startTui(options = {}) {
   try {
     const env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
+    printWelcome(getKimiVersion(env));
     const sessions = await loadSessions(env);
     const projects = buildProjects(sessions);
 
