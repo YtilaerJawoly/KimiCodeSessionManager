@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "description": "Manage and quickly resume Kimi Code sessions by project",
   "type": "module",
-  "files": ["bin/", "src/", "README.md"],
-  "keywords": ["kimi", "session", "manager", "cli"],
+  "license": "MIT",
+  "author": "",
+  "files": ["bin/", "src/", "README.md", "LICENSE"],
+  "keywords": ["kimi", "kimi-code", "session", "manager", "cli", "tui", "resume"],
   "bin": {
     "ksm": "./bin/ksm.js"
   },
   "scripts": {
-    "test": "node --test tests/**/*.test.js",
-    "lint": "echo 'no linter configured yet'"
+    "test": "node --test tests/**/*.test.js"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.0.0",

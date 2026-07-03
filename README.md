@@ -40,10 +40,23 @@ ksm --home /path/to/.kimi-code
 
 ## 开发
 
+本地开发与调试：
+
+```bash
+npm link
+ksm
+```
+
+运行测试：
+
 ```bash
 npm test
 ```
 
-## 要求
+## 依赖
 
-Node.js >= 20
+- Node.js >= 20
+- `@inquirer/prompts`
+- `chalk`
+- `commander`
+- `fuse.js`
