@@ -73,4 +73,47 @@ describe('loadSessions', () => {
     assert.equal(sessions[0].id, 'session_s1');
     assert.equal(sessions[1].id, 'session_invalid');
   });
+
+  it('discovers sessions by directory scan when index is empty', async () => {
+    rmSync(join(base, 'sessions', 'wd_works_abc123'), { recursive: true, force: true });
+    mkdirSync(join(base, 'sessions', 'wd_other_def456', 'session_s3'), { recursive: true });
+    writeFileSync(join(base, 'sessions', 'wd_other_def456', 'session_s3', 'state.json'), JSON.stringify({
+      title: 'scanned session',
+      createdAt: '2026-07-01T00:00:00.000Z',
+      updatedAt: '2026-07-02T00:00:00.000Z',
+      lastPrompt: 'scan'
+    }));
+    writeFileSync(join(base, 'session_index.jsonl'), '');
+    const sessions = await loadSessions({ KIMI_HOME: base });
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].id, 'session_s3');
+    assert.equal(sessions[0].projectName, 'other');
+  });
+
+  it('deduplicates sessions from index and directory scan', async () => {
+    const sessions = await loadSessions({ KIMI_HOME: base });
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].id, 'session_s1');
+  });
+
+  it('ignores corrupted index lines and loads valid records', async () => {
+    writeFileSync(join(base, 'session_index.jsonl'), 'this is not json\n' + JSON.stringify({
+      sessionId: 'session_s1',
+      sessionDir: join(base, 'sessions', 'wd_works_abc123', 'session_s1'),
+      workDir: '/e/kimi-code/works'
+    }) + '\n');
+    const sessions = await loadSessions({ KIMI_HOME: base });
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].id, 'session_s1');
+  });
+
+  it('uses directory name as id when index entry lacks sessionId', async () => {
+    writeFileSync(join(base, 'session_index.jsonl'), JSON.stringify({
+      sessionDir: join(base, 'sessions', 'wd_works_abc123', 'session_s1'),
+      workDir: '/e/kimi-code/works'
+    }) + '\n');
+    const sessions = await loadSessions({ KIMI_HOME: base });
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].id, 'session_s1');
+  });
 });

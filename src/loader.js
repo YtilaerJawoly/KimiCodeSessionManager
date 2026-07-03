@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
-import { join, basename } from 'node:path';
+import { join, basename, normalize } from 'node:path';
 import { getPaths } from './config.js';
 
 export async function loadSessions(env = process.env) {
@@ -21,7 +21,7 @@ export async function loadSessions(env = process.env) {
     } catch {
       continue;
     }
-    if (!entry.sessionDir || sessions.some(s => s.dir === entry.sessionDir)) continue;
+    if (!entry.sessionDir || sessions.some(s => normalize(s.dir) === normalize(entry.sessionDir))) continue;
     const state = await readState(entry.sessionDir);
     if (!state) continue;
     sessions.push(buildSession(entry, state));
@@ -34,11 +34,10 @@ export async function loadSessions(env = process.env) {
       const sessionDirs = await readdir(projectDir, { withFileTypes: true });
       for (const sd of sessionDirs.filter(d => d.isDirectory() && d.name.startsWith('session_'))) {
         const dir = join(projectDir, sd.name);
-        if (sessions.some(s => s.dir === dir)) continue;
+        if (sessions.some(s => normalize(s.dir) === normalize(dir))) continue;
         const state = await readState(dir);
         if (!state) continue;
         const entry = {
-          sessionId: sd.name,
           sessionDir: dir,
           workDir: inferWorkDir(pd.name),
         };
@@ -65,7 +64,7 @@ async function readState(sessionDir) {
 function buildSession(entry, state) {
   const projectPath = entry.workDir || basename(entry.sessionDir);
   return {
-    id: entry.sessionId,
+    id: basename(entry.sessionDir),
     projectPath,
     projectName: basename(projectPath),
     dir: entry.sessionDir,
