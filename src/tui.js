@@ -142,6 +142,7 @@ async function cleanupMenu(project, env) {
     await projectMenu(newProject, env);
   } else {
     console.log(chalk.yellow('该项目已无会话，返回主界面。'));
+    return;
   }
 }
 
