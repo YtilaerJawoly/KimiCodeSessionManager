@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "description": "Manage and quickly resume Kimi Code sessions by project",
   "type": "module",
+  "files": ["bin/", "src/", "README.md"],
+  "keywords": ["kimi", "session", "manager", "cli"],
   "bin": {
     "ksm": "./bin/ksm.js"
   },
