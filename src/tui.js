@@ -21,6 +21,10 @@ const QUIET_SELECT_THEME = {
   },
 };
 
+function clearLastLine() {
+  process.stdout.write('\x1B[1A\x1B[K');
+}
+
 const QUIET_SEARCH_THEME = {
   prefix: '',
   style: {
@@ -36,7 +40,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = resolve(__dirname, '..');
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
 
-function printWelcome(kimiVersion, notices = []) {
+function printWelcome(kimiVersion) {
   process.stdout.write('\x1B[2J\x1B[H');
   const title = `Kimi Code Session Manager ${pkg.version}`;
   const width = 80;
@@ -54,9 +58,6 @@ function printWelcome(kimiVersion, notices = []) {
   console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
   console.log(chalk.hex('#4A90E2')(line(logoPrefix, title)));
   console.log(chalk.hex('#4A90E2')(line(linePrefix, `Kimi Code: ${kimiVersion || 'unknown'}`)));
-  for (const notice of notices) {
-    console.log(chalk.hex('#4A90E2')(line(linePrefix, notice)));
-  }
   console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
   console.log(chalk.hex('#4A90E2')(bottom));
   console.log();
@@ -132,17 +133,7 @@ export async function startTui(options = {}) {
     ]);
     const ksmStatus = await checkKsmVersion(ROOT_DIR);
 
-    const notices = [];
-    if (!kimiCodeStatus.installed) {
-      notices.push(chalk.yellow('Kimi Code 未安装'));
-    } else if (kimiCodeStatus.hasUpdate) {
-      notices.push(chalk.yellow(`Kimi Code 有新版本可用: ${kimiCodeStatus.latest}`));
-    }
-    if (ksmStatus.hasUpdate) {
-      notices.push(chalk.yellow(`ksm 有新版本可用: ${ksmStatus.latest}`));
-    }
-
-    printWelcome(kimiVersion, notices);
+    printWelcome(kimiVersion);
 
     if (!kimiCodeStatus.installed) {
       const shouldInstall = await select({
@@ -153,6 +144,7 @@ export async function startTui(options = {}) {
           { name: '否', value: false },
         ],
       });
+      clearLastLine();
       if (shouldInstall) {
         const result = await updateKimiCode();
         if (result.success) {
@@ -164,7 +156,7 @@ export async function startTui(options = {}) {
       }
     }
 
-    await mainMenu(env);
+    await mainMenu(env, { kimiCodeStatus, ksmStatus });
   } catch (err) {
     if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
       return;
@@ -178,18 +170,32 @@ export async function startTui(options = {}) {
   }
 }
 
-async function mainMenu(env) {
+async function mainMenu(env, statuses = {}) {
+  const { kimiCodeStatus = {}, ksmStatus = {} } = statuses;
+  const updateHints = [];
+  if (kimiCodeStatus.hasUpdate) {
+    updateHints.push(chalk.yellow(`Kimi Code 有新版本可用: ${kimiCodeStatus.latest}`));
+  }
+  if (ksmStatus.hasUpdate) {
+    updateHints.push(chalk.yellow(`ksm 有新版本可用: ${ksmStatus.latest}`));
+  }
+
   while (true) {
     const action = await select({
       message: '主菜单：',
       theme: QUIET_SELECT_THEME,
       choices: [
         { name: '继续最近会话', value: 'recent' },
-        { name: '更新', value: 'update' },
+        {
+          name: '更新',
+          value: 'update',
+          description: updateHints.length > 0 ? updateHints.join(' | ') : undefined,
+        },
         { name: '快捷设置', value: 'settings' },
         { name: '退出', value: 'exit' },
       ],
     });
+    clearLastLine();
 
     switch (action) {
       case 'recent':
@@ -220,6 +226,7 @@ async function updateMenu() {
         { name: '更新 Kimi Code', value: 'kimiCode' },
       ],
     });
+    clearLastLine();
 
     switch (action) {
       case 'ksm': {
@@ -260,6 +267,7 @@ async function shortcutSettingsMenu() {
         { name: '在桌面添加 start.exe 快捷方式', value: 'desktop' },
       ],
     });
+    clearLastLine();
 
     switch (action) {
       case 'desktop': {
@@ -344,6 +352,7 @@ async function projectMenu(project, env) {
       default: 'continue-latest',
       choices,
     });
+    clearLastLine();
 
     switch (action) {
       case 'continue-latest':
@@ -389,6 +398,7 @@ async function historyMenu(project) {
     pageSize: 15,
     default: project.sessions[0]?.id,
   });
+  clearLastLine();
   if (sid === 'back') return;
   const session = project.sessions.find(s => s.id === sid);
   if (session) await continueSession({ ...session, projectName: project.name });
@@ -418,6 +428,7 @@ async function cleanupMenu(project, env) {
       { name: '取消', value: 'cancel' },
     ],
   });
+  clearLastLine();
 
   if (mode === 'cancel') return;
   for (const id of ids) {
