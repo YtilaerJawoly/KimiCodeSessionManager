@@ -74,7 +74,7 @@ describe('updater', () => {
   it('checkKsmVersion returns current version and remote sha', async () => {
     const spawn = makeMockSpawn({ code: 0, stdout: 'abc1234def5678\tHEAD\n' });
     const result = await checkKsmVersion('/any/dir', spawn);
-    assert.equal(result.current, '0.1.0');
+    assert.equal(result.current, '1.0.0');
     assert.equal(result.latest, 'abc1234');
     assert.equal(result.hasUpdate, true);
   });

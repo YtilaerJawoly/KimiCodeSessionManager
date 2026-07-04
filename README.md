@@ -1,50 +1,89 @@
-# Kimi Code 会话管理器
+# Kimi Code Session Manager
 
-一个 Node.js CLI/TUI 工具，用于按项目聚合、浏览并一键继续 Kimi Code 会话。
+一个用于管理和快速恢复 Kimi Code 会话的 Node.js CLI/TUI 工具。支持按项目聚合会话、一键继续最近会话、批量清理与归档、中英文界面切换，以及 Kimi Code / ksm 自身更新。
 
-## 功能
+---
 
-- 按项目聚合会话，快速继续最近会话
-- 查看每个项目的历史会话并任选继续
-- 为指定项目新建会话
-- 批量删除或归档旧会话
-- 模糊搜索项目名称/路径
+## 功能特性
+
+- **按项目聚合会话**：自动扫描 `~/.kimi-code/sessions`，把同一工作目录的会话归为一个项目。
+- **一键继续最近会话**：进入项目后默认高亮“继续最新会话”。
+- **浏览与搜索历史**：在项目内查看全部历史会话，支持按项目名/路径模糊搜索。
+- **新建会话**：为指定项目快速启动新的 Kimi Code 会话。
+- **批量清理与归档**：多选旧会话，选择删除释放空间，或归档到 `~/.kimi-code/session-manager-archive`。
+- **单实例运行**：通过 `~/.kimi-code/ksm.lock` 防止同时打开多个 ksm 实例。
+- **中英文切换**：主菜单新增“语言”选项，切换后即时生效并持久化到配置。
+- **更新检查**：主菜单集成更新入口，可分别更新 ksm 自身与 Kimi Code。
+- **快捷设置**：一键在桌面创建 `start.exe` 快捷方式。
+
+---
 
 ## 安装
+
+### 全局安装
 
 ```bash
 npm install -g .
 ```
 
-本地开发时也可以使用 `npm link`：
+或本地开发时使用 `npm link`：
 
 ```bash
 npm link
 ```
 
-## 使用
+### Windows 快捷启动
 
-Windows 用户可以直接双击 `start.exe` 或在终端运行 `start.ps1`：
+直接双击 `start.exe`，或在 PowerShell 中运行：
 
 ```powershell
 ./start.ps1
 ```
 
-命令行方式（推荐安装到 PATH 后使用）：
+---
+
+## 使用
+
+安装到 PATH 后，在终端运行：
 
 ```bash
 ksm
-# 或指定 Kimi 主目录
+# 指定 Kimi 主目录
 ksm --home /path/to/.kimi-code
 ```
 
-启动后将进入交互式 TUI，可选择项目、浏览历史会话并继续。
+启动后进入交互式 TUI：
+
+1. **继续最近会话**：搜索并选择项目，继续该项目的最新 Kimi Code 会话。
+2. **更新**：更新 ksm 或 Kimi Code。
+3. **语言**：切换 中文 / English。
+4. **查看历史消息**：查看启动时检测到的版本更新等提示。
+5. **快捷设置**：创建桌面快捷方式。
+6. **退出**：关闭 ksm。
+
+---
 
 ## 目录结构
 
-- `bin/ksm.js`：CLI 入口
-- `src/`：核心模块（配置、加载、聚合、操作、清理、TUI）
-- `tests/`：单元测试
+```
+.
+├── bin/ksm.js          CLI 入口
+├── src/
+│   ├── actions.js      会话继续/新建操作
+│   ├── cleanup.js      会话删除与归档
+│   ├── config.js       配置、单实例锁
+│   ├── i18n.js         中英文国际化
+│   ├── loader.js       会话扫描与加载
+│   ├── shortcut.js     桌面快捷方式
+│   ├── store.js        项目聚合与查询
+│   ├── tui.js          交互式 TUI
+│   └── updater.js      更新逻辑
+├── tests/              单元测试
+├── start.ps1           Windows PowerShell 启动脚本
+└── start.exe           Windows 可执行启动入口
+```
+
+---
 
 ## 开发
 
@@ -61,6 +100,8 @@ ksm
 npm test
 ```
 
+---
+
 ## 依赖
 
 - Node.js >= 20
@@ -68,3 +109,15 @@ npm test
 - `chalk`
 - `commander`
 - `fuse.js`
+
+---
+
+## 版本
+
+当前版本：`v1.0.0`
+
+---
+
+## 许可证
+
+MIT
