@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
 import { select, search } from '@inquirer/prompts';
 import chalk from 'chalk';
 import Fuse from 'fuse.js';
@@ -18,6 +19,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
 
 function printWelcome(kimiVersion) {
+  process.stdout.write('\x1B[2J\x1B[H');
   const title = `Kimi Code Session Manager ${pkg.version}`;
   const width = 80;
   const line = (text) => {
@@ -35,20 +37,34 @@ function printWelcome(kimiVersion) {
   console.log();
 }
 
+function getKimiHome(env = process.env) {
+  const raw = env.KIMI_HOME?.trim();
+  return raw ? resolve(raw) : resolve(homedir(), '.kimi-code');
+}
+
 function getKimiVersion(env = process.env) {
-  const home = env.KIMI_HOME || homedir();
-  const files = ['version.json', 'latest.json'];
-  for (const file of files) {
-    try {
-      const text = readFileSync(join(home, 'updates', file), 'utf8');
-      const data = JSON.parse(text);
-      const version = data.version || data.current || data.latest || data.manifest?.version;
-      if (version) return version;
-    } catch {
-      // try next file
+  return new Promise((resolve) => {
+    const exe = join(getKimiHome(env), 'bin', 'kimi.exe');
+    if (!existsSync(exe)) {
+      resolve('');
+      return;
     }
-  }
-  return '';
+    const child = spawn(exe, ['--version'], { shell: false });
+    let stdout = '';
+    let stderr = '';
+    child.stdout?.on('data', (data) => { stdout += data; });
+    child.stderr?.on('data', (data) => { stderr += data; });
+    child.on('error', () => resolve(''));
+    child.on('close', (code) => {
+      const output = (stdout || stderr).trim();
+      if (code !== 0 || !output) {
+        resolve('');
+        return;
+      }
+      const match = output.match(/(?:kimi\s+)?v?(\d+\.\d+(?:\.\d+)?)/i);
+      resolve(match ? match[1] : output);
+    });
+  });
 }
 
 function padEnd(str, width) {
@@ -69,7 +85,7 @@ function stringWidth(str) {
 export async function startTui(options = {}) {
   try {
     const env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
-    printWelcome(getKimiVersion(env));
+    printWelcome(await getKimiVersion(env));
     const sessions = await loadSessions(env);
     const projects = buildProjects(sessions);
 
