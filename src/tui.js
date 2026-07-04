@@ -302,12 +302,13 @@ async function languageMenu(env) {
     theme: QUIET_SELECT_THEME,
     default: current,
     choices: [
+      { name: t('languageMenu.back'), value: 'back' },
       { name: t('languageMenu.zhCN'), value: 'zh-CN' },
       { name: t('languageMenu.en'), value: 'en' },
     ],
   });
   clearLastLine();
-  if (action && action !== current) {
+  if (action && action !== 'back' && action !== current) {
     setLocale(action);
     saveKsmConfig({ locale: action }, env);
   }
@@ -361,7 +362,6 @@ async function recentSessionsMenu(env) {
       const term = input.trim();
       const results = term ? fuse.search(term).map(r => r.item) : projects;
       return [
-        { name: t('recentMenu.back'), value: 'back' },
         ...results.map(p => {
           const name = truncate(p.name, 20);
           const path = chalk.gray(truncate(p.path, PATH_WIDTH - 2));
@@ -372,6 +372,7 @@ async function recentSessionsMenu(env) {
             description: t('recentMenu.latest', { title: truncate(getLatestSession(p).title, 60) }),
           };
         }),
+        { name: t('recentMenu.back'), value: 'back' },
       ];
     },
   });
