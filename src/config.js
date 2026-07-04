@@ -16,7 +16,29 @@ export function getPaths(env = process.env) {
     sessionsDir: join(home, 'sessions'),
     archiveDir: join(home, 'session-manager-archive'),
     lockFile: join(home, 'ksm.lock'),
+    configFile: join(home, 'ksm-config.json'),
   };
+}
+
+export function loadKsmConfig(env = process.env) {
+  const { configFile } = getPaths(env);
+  try {
+    if (!existsSync(configFile)) return {};
+    const text = readFileSync(configFile, 'utf8');
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
+}
+
+export function saveKsmConfig(config, env = process.env) {
+  const { home, configFile } = getPaths(env);
+  try {
+    if (!existsSync(home)) mkdirSync(home, { recursive: true });
+    writeFileSync(configFile, JSON.stringify(config, null, 2), 'utf8');
+  } catch {
+    // ignore write failures
+  }
 }
 
 export function acquireInstanceLock(env = process.env) {

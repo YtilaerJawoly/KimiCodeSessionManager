@@ -11,7 +11,8 @@ import { continueSession, createSession } from './actions.js';
 import { deleteSession, archiveSession } from './cleanup.js';
 import { updateKimiCode, updateKsm, checkKimiCodeVersion, checkKsmVersion } from './updater.js';
 import { createDesktopShortcut } from './shortcut.js';
-import { acquireInstanceLock, releaseInstanceLock } from './config.js';
+import { acquireInstanceLock, releaseInstanceLock, loadKsmConfig, saveKsmConfig } from './config.js';
+import { setLocale, t, getLocale } from './i18n.js';
 
 const QUIET_SELECT_THEME = {
   prefix: '',
@@ -42,7 +43,7 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8
 
 function printWelcome(kimiVersion, messages = []) {
   process.stdout.write('\x1B[2J\x1B[H');
-  const title = `Kimi Code Session Manager ${pkg.version}`;
+  const title = t('welcome.title', { version: pkg.version });
   const width = 80;
   const leftPad = '  ';
   const logoPrefix = '▐█▛█▛█▌  ';
@@ -57,7 +58,7 @@ function printWelcome(kimiVersion, messages = []) {
   console.log(chalk.hex('#4A90E2')(border));
   console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
   console.log(chalk.hex('#4A90E2')(line(logoPrefix, title)));
-  console.log(chalk.hex('#4A90E2')(line(linePrefix, `Kimi Code: ${kimiVersion || 'unknown'}`)));
+  console.log(chalk.hex('#4A90E2')(line(linePrefix, t('welcome.subtitle', { version: kimiVersion || 'unknown' }))));
   console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
   console.log(chalk.hex('#4A90E2')(bottom));
 
@@ -110,13 +111,16 @@ export async function startTui(options = {}) {
     const lock = acquireInstanceLock(env);
     if (!lock.acquired) {
       const message = lock.pid
-        ? `Kimi Code Session Manager 已在运行中（PID: ${lock.pid}）`
-        : `无法获取单实例锁：${lock.error || '未知错误'}`;
+        ? t('error.alreadyRunning', { pid: lock.pid })
+        : t('error.lockFailed', { message: lock.error || '' });
       console.error(chalk.red(message));
       process.exitCode = 1;
       return;
     }
     lockAcquired = true;
+
+    const config = loadKsmConfig(env);
+    if (config.locale) setLocale(config.locale);
 
     const kimiVersion = getKimiVersion(env);
     printWelcome(kimiVersion);
@@ -129,21 +133,21 @@ export async function startTui(options = {}) {
     const initialCodeStatus = await checkKimiCodeVersion(env);
     if (!initialCodeStatus.installed) {
       const shouldInstall = await select({
-        message: 'Kimi Code 未安装，是否立即安装？',
+        message: t('install.title'),
         theme: QUIET_SELECT_THEME,
         choices: [
-          { name: '是', value: true },
-          { name: '否', value: false },
+          { name: t('install.yes'), value: true },
+          { name: t('install.no'), value: false },
         ],
       });
       clearLastLine();
       if (shouldInstall) {
         const result = await updateKimiCode();
         if (result.success) {
-          console.log(chalk.green('Kimi Code 安装成功。'));
+          console.log(chalk.green(t('install.success')));
         } else {
-          console.error(chalk.red(`Kimi Code 安装失败：${result.message}`));
-          console.log(chalk.yellow('请手动运行：irm https://code.kimi.com/kimi-code/install.ps1 | iex'));
+          console.error(chalk.red(t('install.failed', { message: result.message })));
+          console.log(chalk.yellow(t('install.manual')));
         }
       }
     }
@@ -153,7 +157,7 @@ export async function startTui(options = {}) {
     if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
       return;
     }
-    console.error(chalk.red(`错误：${err?.message || err}`));
+    console.error(chalk.red(t('error.prefix', { message: err?.message || err })));
     process.exit(1);
   } finally {
     if (lockAcquired && env) {
@@ -171,12 +175,12 @@ async function mainMenu(env, options = {}) {
   function buildMessages(kimiCodeStatus, ksmStatus) {
     const list = [];
     if (!kimiCodeStatus.installed) {
-      list.push({ level: 'warning', text: 'Kimi Code 未安装' });
+      list.push({ level: 'warning', text: t('install.title') });
     } else if (kimiCodeStatus.hasUpdate) {
-      list.push({ level: 'warning', text: `Kimi Code 有新版本可用: ${kimiCodeStatus.latest}` });
+      list.push({ level: 'warning', text: t('mainMenu.kimiCodeUpdate', { version: kimiCodeStatus.latest }) });
     }
     if (ksmStatus.hasUpdate) {
-      list.push({ level: 'warning', text: `ksm 有新版本可用: ${ksmStatus.latest}` });
+      list.push({ level: 'warning', text: t('mainMenu.ksmUpdate', { version: ksmStatus.latest }) });
     }
     return list;
   }
@@ -190,14 +194,15 @@ async function mainMenu(env, options = {}) {
     printWelcome(kimiVersion, messages);
 
     const prompt = select({
-      message: '主菜单：',
+      message: t('mainMenu.title'),
       theme: QUIET_SELECT_THEME,
       choices: [
-        { name: '继续最近会话', value: 'recent' },
-        { name: '更新', value: 'update' },
-        { name: '查看历史消息', value: 'messages' },
-        { name: '快捷设置', value: 'settings' },
-        { name: '退出', value: 'exit' },
+        { name: t('mainMenu.recent'), value: 'recent' },
+        { name: t('mainMenu.update'), value: 'update' },
+        { name: t('mainMenu.language'), value: 'language' },
+        { name: t('mainMenu.messages'), value: 'messages' },
+        { name: t('mainMenu.settings'), value: 'settings' },
+        { name: t('mainMenu.exit'), value: 'exit' },
       ],
     });
 
@@ -230,6 +235,9 @@ async function mainMenu(env, options = {}) {
       case 'update':
         await updateMenu(env, messages);
         break;
+      case 'language':
+        await languageMenu(env);
+        break;
       case 'messages':
         await messagesMenu(messages);
         break;
@@ -246,13 +254,13 @@ async function mainMenu(env, options = {}) {
 async function updateMenu(env, messages = []) {
   while (true) {
     const action = await select({
-      message: '更新：',
+      message: t('updateMenu.title'),
       theme: QUIET_SELECT_THEME,
       default: 'ksm',
       choices: [
-        { name: '返回上一级', value: 'back' },
-        { name: '更新 ksm', value: 'ksm' },
-        { name: '更新 Kimi Code', value: 'kimiCode' },
+        { name: t('updateMenu.back'), value: 'back' },
+        { name: t('updateMenu.ksm'), value: 'ksm' },
+        { name: t('updateMenu.kimiCode'), value: 'kimiCode' },
       ],
     });
     clearLastLine();
@@ -261,10 +269,10 @@ async function updateMenu(env, messages = []) {
       case 'ksm': {
         const result = await updateKsm(ROOT_DIR);
         if (result.success) {
-          console.log(chalk.green(`ksm 更新成功：${result.message}`));
+          console.log(chalk.green(t('updateMenu.ksmSuccess', { message: result.message })));
         } else {
-          console.error(chalk.red(`ksm 更新失败：${result.message}`));
-          console.log(chalk.yellow('请手动运行：git pull'));
+          console.error(chalk.red(t('updateMenu.ksmFailed', { message: result.message })));
+          console.log(chalk.yellow(t('updateMenu.ksmManual')));
         }
         printWelcome(getKimiVersion(env), messages);
         break;
@@ -273,10 +281,10 @@ async function updateMenu(env, messages = []) {
         const result = await updateKimiCode();
         if (result.success) {
           console.log(chalk.green(result.message));
-          console.log(chalk.yellow('安装窗口已打开，完成后请重新打开终端使用 Kimi Code。'));
+          console.log(chalk.yellow(t('updateMenu.kimiCodeWindowOpened')));
         } else {
-          console.error(chalk.red(`Kimi Code 更新失败：${result.message}`));
-          console.log(chalk.yellow('请手动运行：irm https://code.kimi.com/kimi-code/install.ps1 | iex'));
+          console.error(chalk.red(t('updateMenu.ksmFailed', { message: result.message })));
+          console.log(chalk.yellow(t('updateMenu.kimiCodeManual')));
         }
         break;
       }
@@ -287,15 +295,33 @@ async function updateMenu(env, messages = []) {
   }
 }
 
+async function languageMenu(env) {
+  const current = getLocale();
+  const action = await select({
+    message: t('languageMenu.title'),
+    theme: QUIET_SELECT_THEME,
+    default: current,
+    choices: [
+      { name: t('languageMenu.zhCN'), value: 'zh-CN' },
+      { name: t('languageMenu.en'), value: 'en' },
+    ],
+  });
+  clearLastLine();
+  if (action && action !== current) {
+    setLocale(action);
+    saveKsmConfig({ locale: action }, env);
+  }
+}
+
 async function shortcutSettingsMenu() {
   while (true) {
     const action = await select({
-      message: '快捷设置：',
+      message: t('settingsMenu.title'),
       theme: QUIET_SELECT_THEME,
       default: 'desktop',
       choices: [
-        { name: '返回上一级', value: 'back' },
-        { name: '在桌面添加 start.exe 快捷方式', value: 'desktop' },
+        { name: t('settingsMenu.back'), value: 'back' },
+        { name: t('settingsMenu.desktop'), value: 'desktop' },
       ],
     });
     clearLastLine();
@@ -304,9 +330,9 @@ async function shortcutSettingsMenu() {
       case 'desktop': {
         const result = await createDesktopShortcut(join(ROOT_DIR, 'start.exe'));
         if (result.success) {
-          console.log(chalk.green(`已创建桌面快捷方式：${result.message}`));
+          console.log(chalk.green(t('settingsMenu.desktopSuccess', { message: result.message })));
         } else {
-          console.error(chalk.red(`创建失败：${result.message}`));
+          console.error(chalk.red(t('settingsMenu.desktopFailed', { message: result.message })));
         }
         break;
       }
@@ -322,28 +348,28 @@ async function recentSessionsMenu(env) {
   const projects = buildProjects(sessions);
 
   if (projects.length === 0) {
-    console.log(chalk.yellow('未找到任何 Kimi 会话。'));
+    console.log(chalk.yellow(t('recentMenu.noProjects')));
     return;
   }
 
   const fuse = new Fuse(projects, FUSE_OPTIONS);
 
   const selectedPath = await search({
-    message: '搜索并选择一个项目继续最新会话：',
+    message: t('recentMenu.title'),
     theme: QUIET_SEARCH_THEME,
     source: (input = '') => {
       const term = input.trim();
       const results = term ? fuse.search(term).map(r => r.item) : projects;
       return [
-        { name: '返回上一级', value: 'back' },
+        { name: t('recentMenu.back'), value: 'back' },
         ...results.map(p => {
           const name = truncate(p.name, 20);
           const path = chalk.gray(truncate(p.path, PATH_WIDTH - 2));
-          const meta = chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`);
+          const meta = chalk.dim(`(${t('recentMenu.sessionMeta', { count: p.sessionCount, time: formatTime(p.lastUpdated) })})`);
           return {
             name: `${padEnd(name, NAME_WIDTH)}${padEnd(path, PATH_WIDTH)}${meta}`,
             value: p.path,
-            description: `最新: ${truncate(getLatestSession(p).title, 60)}`,
+            description: t('recentMenu.latest', { title: truncate(getLatestSession(p).title, 60) }),
           };
         }),
       ];
@@ -354,7 +380,7 @@ async function recentSessionsMenu(env) {
 
   const project = findProjectByPath(projects, selectedPath);
   if (!project) {
-    console.warn(chalk.yellow('未找到选择的项目。'));
+    console.warn(chalk.yellow(t('recentMenu.projectNotFound')));
     return;
   }
 
@@ -370,15 +396,15 @@ async function projectMenu(project, env) {
     const latest = currentProject.sessions.length > 0 ? getLatestSession(currentProject) : null;
 
     const choices = [
-      { name: '返回上一级', value: 'back' },
-      { name: latest ? `继续最新会话: ${truncate(latest.title, 40)}` : '继续最新会话（无）', value: 'continue-latest', disabled: !latest },
-      { name: '查看该项目的历史会话', value: 'history', disabled: currentProject.sessions.length === 0 },
-      { name: '为此项目新建会话', value: 'new' },
-      { name: '清理/归档旧会话', value: 'cleanup', disabled: currentProject.sessions.length === 0 },
+      { name: t('projectMenu.back'), value: 'back' },
+      { name: latest ? t('projectMenu.continueLatest', { title: truncate(latest.title, 40) }) : t('projectMenu.continueLatestEmpty'), value: 'continue-latest', disabled: !latest },
+      { name: t('projectMenu.history'), value: 'history', disabled: currentProject.sessions.length === 0 },
+      { name: t('projectMenu.new'), value: 'new' },
+      { name: t('projectMenu.cleanup'), value: 'cleanup', disabled: currentProject.sessions.length === 0 },
     ];
 
     const action = await select({
-      message: `${currentProject.name} — 选择操作：`,
+      message: t('projectMenu.title', { name: currentProject.name }),
       theme: QUIET_SELECT_THEME,
       default: 'continue-latest',
       choices,
@@ -414,7 +440,7 @@ async function projectMenu(project, env) {
 
 async function messagesMenu(messages) {
   const choices = [
-    { name: '返回上一级', value: 'back' },
+    { name: t('messagesMenu.back'), value: 'back' },
     ...messages.map((msg, index) => ({
       name: `${msg.time || '-'}  [${msg.level || 'info'}]  ${msg.text}`,
       value: index,
@@ -422,12 +448,12 @@ async function messagesMenu(messages) {
   ];
 
   if (messages.length === 0) {
-    console.log(chalk.yellow('暂无历史消息。'));
+    console.log(chalk.yellow(t('messagesMenu.empty')));
     return;
   }
 
   const selected = await select({
-    message: '历史消息：',
+    message: t('messagesMenu.title'),
     theme: QUIET_SELECT_THEME,
     choices,
     pageSize: 15,
@@ -437,15 +463,15 @@ async function messagesMenu(messages) {
 
   const msg = messages[selected];
   if (msg) {
-    console.log(chalk.cyan(`时间: ${msg.time || '-'}`));
-    console.log(chalk.cyan(`级别: ${msg.level || 'info'}`));
-    console.log(chalk.cyan(`内容: ${msg.text}`));
+    console.log(chalk.cyan(`${t('messagesMenu.time')}: ${msg.time || '-'}`));
+    console.log(chalk.cyan(`${t('messagesMenu.level')}: ${msg.level || 'info'}`));
+    console.log(chalk.cyan(`${t('messagesMenu.content')}: ${msg.text}`));
   }
 }
 
 async function historyMenu(project) {
   const choices = [
-    { name: '返回上一级', value: 'back' },
+    { name: t('historyMenu.back'), value: 'back' },
     ...project.sessions.map(s => ({
       name: `${truncate(s.title, 40)}  ${chalk.gray(formatTime(s.updatedAt))}`,
       value: s.id,
@@ -454,7 +480,7 @@ async function historyMenu(project) {
   ];
 
   const sid = await select({
-    message: '选择要继续的历史会话：',
+    message: t('historyMenu.title'),
     theme: QUIET_SELECT_THEME,
     choices,
     pageSize: 15,
@@ -469,7 +495,7 @@ async function historyMenu(project) {
 async function cleanupMenu(project, env) {
   const { checkbox } = await import('@inquirer/prompts');
   const choices = [
-    { name: '返回上一级', value: 'back' },
+    { name: t('cleanupMenu.back'), value: 'back' },
     ...project.sessions.map(s => ({
       name: `${truncate(s.title, 40)}  ${chalk.gray(formatTime(s.updatedAt))}`,
       value: s.id,
@@ -477,17 +503,17 @@ async function cleanupMenu(project, env) {
     })),
   ];
 
-  const ids = await checkbox({ message: '选择要清理的会话（支持多选）：', choices, theme: { prefix: '' } });
+  const ids = await checkbox({ message: t('cleanupMenu.title'), choices, theme: { prefix: '' } });
   if (ids.length === 0 || ids.includes('back')) return;
 
   const mode = await select({
-    message: '如何处理选中的会话？',
+    message: t('cleanupMenu.modeTitle'),
     theme: QUIET_SELECT_THEME,
     default: 'delete',
     choices: [
-      { name: '删除（释放磁盘空间）', value: 'delete' },
-      { name: '归档（移动到 archive 目录）', value: 'archive' },
-      { name: '取消', value: 'cancel' },
+      { name: t('cleanupMenu.delete'), value: 'delete' },
+      { name: t('cleanupMenu.archive'), value: 'archive' },
+      { name: t('cleanupMenu.cancel'), value: 'cancel' },
     ],
   });
   clearLastLine();
@@ -503,16 +529,17 @@ async function cleanupMenu(project, env) {
         await archiveSession(session, env);
       }
     } catch (err) {
-      console.error(chalk.red(`处理 ${truncate(session.title, 40)} 失败：${err.message}`));
+      console.error(chalk.red(t('cleanupMenu.failed', { title: truncate(session.title, 40), message: err.message })));
     }
   }
-  console.log(chalk.green(`已${mode === 'delete' ? '删除' : '归档'} ${ids.length} 个会话。`));
+  const actionLabel = mode === 'delete' ? t('cleanupMenu.deleteAction') : t('cleanupMenu.archiveAction');
+  console.log(chalk.green(t('cleanupMenu.result', { action: actionLabel, count: ids.length })));
 
   const sessions = await loadSessions(env);
   const projects = buildProjects(sessions);
   const newProject = findProjectByPath(projects, project.path);
   if (!newProject || newProject.sessions.length === 0) {
-    console.log(chalk.yellow('该项目已无会话，返回主界面。'));
+    console.log(chalk.yellow(t('cleanupMenu.noSessions')));
   }
 }
 
@@ -524,5 +551,6 @@ function truncate(str, max) {
 
 function formatTime(iso) {
   const d = new Date(iso);
-  return isNaN(d) ? iso : d.toLocaleString('zh-CN');
+  const locale = getLocale() === 'zh-CN' ? 'zh-CN' : 'en-US';
+  return isNaN(d) ? iso : d.toLocaleString(locale);
 }
