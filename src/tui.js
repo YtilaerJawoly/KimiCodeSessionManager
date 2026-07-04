@@ -11,7 +11,23 @@ import { continueSession, createSession } from './actions.js';
 import { deleteSession, archiveSession } from './cleanup.js';
 import { updateKimiCode, updateKsm, checkKimiCodeVersion, checkKsmVersion } from './updater.js';
 import { createDesktopShortcut } from './shortcut.js';
+import { acquireInstanceLock, releaseInstanceLock } from './config.js';
 
+const QUIET_SELECT_THEME = {
+  prefix: '',
+  style: {
+    message: () => '',
+    answer: () => '',
+  },
+};
+
+const QUIET_SEARCH_THEME = {
+  prefix: '',
+  style: {
+    message: () => '',
+    answer: () => '',
+  },
+};
 const NAME_WIDTH = 22;
 const PATH_WIDTH = 42;
 const FUSE_OPTIONS = { keys: ['name', 'path'], threshold: 0.4 };
@@ -24,20 +40,24 @@ function printWelcome(kimiVersion, notices = []) {
   process.stdout.write('\x1B[2J\x1B[H');
   const title = `Kimi Code Session Manager ${pkg.version}`;
   const width = 80;
-  const line = (text) => {
-    const pad = width - stringWidth(text);
-    return '│' + text + ' '.repeat(Math.max(0, pad)) + '│';
+  const leftPad = '  ';
+  const logoPrefix = '▐█▛█▛█▌  ';
+  const linePrefix = '▐█████▌  ';
+  const line = (prefix, text) => {
+    const visibleText = leftPad + prefix + text;
+    const pad = width - stringWidth(visibleText);
+    return '│' + visibleText + ' '.repeat(Math.max(0, pad)) + '│';
   };
   const border = '╭' + '─'.repeat(width) + '╮';
   const bottom = '╰' + '─'.repeat(width) + '╯';
   console.log(chalk.hex('#4A90E2')(border));
-  console.log(chalk.hex('#4A90E2')(line('')));
-  console.log(chalk.hex('#4A90E2')(line(`  ▐█▛█▛█▌  ${title}`)));
-  console.log(chalk.hex('#4A90E2')(line(`  ▐█████▌  Kimi Code: ${kimiVersion || 'unknown'}`)));
+  console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
+  console.log(chalk.hex('#4A90E2')(line(logoPrefix, title)));
+  console.log(chalk.hex('#4A90E2')(line(linePrefix, `Kimi Code: ${kimiVersion || 'unknown'}`)));
   for (const notice of notices) {
-    console.log(chalk.hex('#4A90E2')(line(`  ▐█████▌  ${notice}`)));
+    console.log(chalk.hex('#4A90E2')(line(linePrefix, notice)));
   }
-  console.log(chalk.hex('#4A90E2')(line('')));
+  console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
   console.log(chalk.hex('#4A90E2')(bottom));
   console.log();
 }
@@ -90,8 +110,21 @@ function stringWidth(str) {
 }
 
 export async function startTui(options = {}) {
+  let env;
+  let lockAcquired = false;
   try {
-    const env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
+    env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
+
+    const lock = acquireInstanceLock(env);
+    if (!lock.acquired) {
+      const message = lock.pid
+        ? `Kimi Code Session Manager 已在运行中（PID: ${lock.pid}）`
+        : `无法获取单实例锁：${lock.error || '未知错误'}`;
+      console.error(chalk.red(message));
+      process.exitCode = 1;
+      return;
+    }
+    lockAcquired = true;
 
     const [kimiVersion, kimiCodeStatus] = await Promise.all([
       getKimiVersion(env),
@@ -114,6 +147,7 @@ export async function startTui(options = {}) {
     if (!kimiCodeStatus.installed) {
       const shouldInstall = await select({
         message: 'Kimi Code 未安装，是否立即安装？',
+        theme: QUIET_SELECT_THEME,
         choices: [
           { name: '是', value: true },
           { name: '否', value: false },
@@ -137,6 +171,10 @@ export async function startTui(options = {}) {
     }
     console.error(chalk.red(`错误：${err?.message || err}`));
     process.exit(1);
+  } finally {
+    if (lockAcquired && env) {
+      releaseInstanceLock(env);
+    }
   }
 }
 
@@ -144,6 +182,7 @@ async function mainMenu(env) {
   while (true) {
     const action = await select({
       message: '主菜单：',
+      theme: QUIET_SELECT_THEME,
       choices: [
         { name: '继续最近会话', value: 'recent' },
         { name: '更新', value: 'update' },
@@ -173,7 +212,8 @@ async function updateMenu() {
   while (true) {
     const action = await select({
       message: '更新：',
-      default: 1,
+      theme: QUIET_SELECT_THEME,
+      default: 'ksm',
       choices: [
         { name: '返回上一级', value: 'back' },
         { name: '更新 ksm', value: 'ksm' },
@@ -213,7 +253,8 @@ async function shortcutSettingsMenu() {
   while (true) {
     const action = await select({
       message: '快捷设置：',
-      default: 1,
+      theme: QUIET_SELECT_THEME,
+      default: 'desktop',
       choices: [
         { name: '返回上一级', value: 'back' },
         { name: '在桌面添加 start.exe 快捷方式', value: 'desktop' },
@@ -250,21 +291,27 @@ async function recentSessionsMenu(env) {
 
   const selectedPath = await search({
     message: '搜索并选择一个项目继续最新会话：',
+    theme: QUIET_SEARCH_THEME,
     source: (input = '') => {
       const term = input.trim();
       const results = term ? fuse.search(term).map(r => r.item) : projects;
-      return results.map(p => {
-        const name = truncate(p.name, 20);
-        const path = chalk.gray(truncate(p.path, PATH_WIDTH - 2));
-        const meta = chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`);
-        return {
-          name: `${padEnd(name, NAME_WIDTH)}${padEnd(path, PATH_WIDTH)}${meta}`,
-          value: p.path,
-          description: `最新: ${truncate(getLatestSession(p).title, 60)}`,
-        };
-      });
+      return [
+        { name: '返回上一级', value: 'back' },
+        ...results.map(p => {
+          const name = truncate(p.name, 20);
+          const path = chalk.gray(truncate(p.path, PATH_WIDTH - 2));
+          const meta = chalk.dim(`(${p.sessionCount} 个会话, 最近 ${formatTime(p.lastUpdated)})`);
+          return {
+            name: `${padEnd(name, NAME_WIDTH)}${padEnd(path, PATH_WIDTH)}${meta}`,
+            value: p.path,
+            description: `最新: ${truncate(getLatestSession(p).title, 60)}`,
+          };
+        }),
+      ];
     },
   });
+
+  if (selectedPath === 'back') return;
 
   const project = findProjectByPath(projects, selectedPath);
   if (!project) {
@@ -291,7 +338,12 @@ async function projectMenu(project, env) {
       { name: '清理/归档旧会话', value: 'cleanup', disabled: currentProject.sessions.length === 0 },
     ];
 
-    const action = await select({ message: `${currentProject.name} — 选择操作：`, default: 1, choices });
+    const action = await select({
+      message: `${currentProject.name} — 选择操作：`,
+      theme: QUIET_SELECT_THEME,
+      default: 'continue-latest',
+      choices,
+    });
 
     switch (action) {
       case 'continue-latest':
@@ -330,7 +382,13 @@ async function historyMenu(project) {
     })),
   ];
 
-  const sid = await select({ message: '选择要继续的历史会话：', choices, pageSize: 15, default: 1 });
+  const sid = await select({
+    message: '选择要继续的历史会话：',
+    theme: QUIET_SELECT_THEME,
+    choices,
+    pageSize: 15,
+    default: project.sessions[0]?.id,
+  });
   if (sid === 'back') return;
   const session = project.sessions.find(s => s.id === sid);
   if (session) await continueSession({ ...session, projectName: project.name });
@@ -347,11 +405,13 @@ async function cleanupMenu(project, env) {
     })),
   ];
 
-  const ids = await checkbox({ message: '选择要清理的会话（支持多选）：', choices });
+  const ids = await checkbox({ message: '选择要清理的会话（支持多选）：', choices, theme: { prefix: '' } });
   if (ids.length === 0 || ids.includes('back')) return;
 
   const mode = await select({
     message: '如何处理选中的会话？',
+    theme: QUIET_SELECT_THEME,
+    default: 'delete',
     choices: [
       { name: '删除（释放磁盘空间）', value: 'delete' },
       { name: '归档（移动到 archive 目录）', value: 'archive' },
