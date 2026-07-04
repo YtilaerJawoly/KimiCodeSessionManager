@@ -22,24 +22,33 @@ function makeMockSpawn({ code = 0, error = null, stdout = '', stderr = '' } = {}
 }
 
 describe('updater', () => {
-  it('updateKimiCode runs PowerShell install script', async () => {
+  it('updateKimiCode opens a new PowerShell window on Windows', async () => {
     let captured;
     const spawn = (cmd, args, options) => {
       captured = { cmd, args, options };
-      return makeMockSpawn({ code: 0, stdout: 'installed' })();
+      const child = new EventEmitter();
+      process.nextTick(() => child.emit('spawn'));
+      return child;
     };
     const result = await updateKimiCode(spawn);
     assert.equal(result.success, true);
-    assert.equal(result.message, 'installed');
+    assert.equal(result.message, '已在新窗口启动 Kimi Code 安装程序，完成后请重新打开终端。');
     assert.equal(captured.cmd, 'powershell.exe');
-    assert.deepEqual(captured.args, ['-Command', 'irm https://code.kimi.com/kimi-code/install.ps1 | iex']);
+    assert.equal(captured.args[0], '-NoExit');
+    assert.equal(captured.args[1], '-Command');
+    assert.ok(captured.args[2].includes('irm https://code.kimi.com/kimi-code/install.ps1 | iex'));
+    assert.ok(captured.options.detached);
   });
 
-  it('updateKimiCode returns failure message on error', async () => {
-    const spawn = makeMockSpawn({ code: 1, stderr: 'network error' });
+  it('updateKimiCode returns failure when spawn fails', async () => {
+    const spawn = (cmd, args, options) => {
+      const child = new EventEmitter();
+      process.nextTick(() => child.emit('error', new Error('spawn error')));
+      return child;
+    };
     const result = await updateKimiCode(spawn);
     assert.equal(result.success, false);
-    assert.equal(result.message, 'network error');
+    assert.equal(result.message, 'spawn error');
   });
 
   it('updateKsm runs git pull in given directory', async () => {

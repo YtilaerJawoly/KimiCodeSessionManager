@@ -228,7 +228,7 @@ async function mainMenu(env, options = {}) {
         await recentSessionsMenu(env);
         break;
       case 'update':
-        await updateMenu();
+        await updateMenu(env, messages);
         break;
       case 'messages':
         await messagesMenu(messages);
@@ -243,7 +243,7 @@ async function mainMenu(env, options = {}) {
   }
 }
 
-async function updateMenu() {
+async function updateMenu(env, messages = []) {
   while (true) {
     const action = await select({
       message: '更新：',
@@ -266,12 +266,14 @@ async function updateMenu() {
           console.error(chalk.red(`ksm 更新失败：${result.message}`));
           console.log(chalk.yellow('请手动运行：git pull'));
         }
+        printWelcome(getKimiVersion(env), messages);
         break;
       }
       case 'kimiCode': {
         const result = await updateKimiCode();
         if (result.success) {
-          console.log(chalk.green(`Kimi Code 更新成功：${result.message}`));
+          console.log(chalk.green(result.message));
+          console.log(chalk.yellow('安装窗口已打开，完成后请重新打开终端使用 Kimi Code。'));
         } else {
           console.error(chalk.red(`Kimi Code 更新失败：${result.message}`));
           console.log(chalk.yellow('请手动运行：irm https://code.kimi.com/kimi-code/install.ps1 | iex'));

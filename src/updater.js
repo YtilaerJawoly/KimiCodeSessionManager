@@ -10,10 +10,40 @@ export function getKimiHome(env = process.env) {
 }
 
 export async function updateKimiCode(spawner = spawn) {
-  return runPowerShellCommand(
-    'irm https://code.kimi.com/kimi-code/install.ps1 | iex',
-    spawner
-  );
+  const isWin = platform() === 'win32';
+  if (!isWin) {
+    return runPowerShellCommand(
+      'irm https://code.kimi.com/kimi-code/install.ps1 | iex',
+      spawner
+    );
+  }
+
+  return new Promise((resolve) => {
+    const command = [
+      'irm https://code.kimi.com/kimi-code/install.ps1 | iex;',
+      "Write-Host '';",
+      "Write-Host '安装完成，请关闭此窗口并重新打开一个终端使用 Kimi Code。' -ForegroundColor Green;",
+      "Read-Host '按 Enter 键退出'",
+    ].join(' ');
+
+    const child = spawner(
+      'powershell.exe',
+      [
+        '-NoExit',
+        '-Command',
+        command,
+      ],
+      { detached: true }
+    );
+
+    child.on('error', (err) => resolve({ success: false, message: err.message }));
+    child.on('spawn', () => {
+      resolve({
+        success: true,
+        message: '已在新窗口启动 Kimi Code 安装程序，完成后请重新打开终端。',
+      });
+    });
+  });
 }
 
 export async function updateKsm(cwd, spawner = spawn) {
