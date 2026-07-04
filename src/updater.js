@@ -136,17 +136,33 @@ async function getRemoteKsmVersion(cwd, spawner) {
     const child = spawner('git', ['ls-remote', 'origin', 'HEAD'], { cwd, stdio: 'pipe' });
     let stdout = '';
     let stderr = '';
+    let settled = false;
+
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      try { child.kill(); } catch {}
+      resolve('');
+    }, 3000);
+
     child.stdout?.on('data', (data) => { stdout += data; });
     child.stderr?.on('data', (data) => { stderr += data; });
-    child.on('error', () => resolve(''));
+    child.on('error', () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve('');
+    });
     child.on('close', (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       if (code !== 0) {
         resolve('');
         return;
       }
       const line = stdout.trim().split('\n')[0] || '';
       const sha = line.split(/\s+/)[0] || '';
-      // 将完整 SHA 截断为 7 位作为版本标识
       resolve(sha.slice(0, 7));
     });
   });

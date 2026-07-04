@@ -40,7 +40,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = resolve(__dirname, '..');
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
 
-function printWelcome(kimiVersion) {
+function printWelcome(kimiVersion, messages = []) {
   process.stdout.write('\x1B[2J\x1B[H');
   const title = `Kimi Code Session Manager ${pkg.version}`;
   const width = 80;
@@ -60,6 +60,11 @@ function printWelcome(kimiVersion) {
   console.log(chalk.hex('#4A90E2')(line(linePrefix, `Kimi Code: ${kimiVersion || 'unknown'}`)));
   console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
   console.log(chalk.hex('#4A90E2')(bottom));
+
+  for (const msg of messages.slice(0, 5)) {
+    const color = msg.level === 'error' ? chalk.red : msg.level === 'warning' ? chalk.yellow : chalk.cyan;
+    console.log(color(msg.text));
+  }
   console.log();
 }
 
@@ -69,28 +74,14 @@ function getKimiHome(env = process.env) {
 }
 
 function getKimiVersion(env = process.env) {
-  return new Promise((resolve) => {
-    const exe = join(getKimiHome(env), 'bin', 'kimi.exe');
-    if (!existsSync(exe)) {
-      resolve('');
-      return;
-    }
-    const child = spawn(exe, ['--version'], { shell: false });
-    let stdout = '';
-    let stderr = '';
-    child.stdout?.on('data', (data) => { stdout += data; });
-    child.stderr?.on('data', (data) => { stderr += data; });
-    child.on('error', () => resolve(''));
-    child.on('close', (code) => {
-      const output = (stdout || stderr).trim();
-      if (code !== 0 || !output) {
-        resolve('');
-        return;
-      }
-      const match = output.match(/(?:kimi\s+)?v?(\d+\.\d+(?:\.\d+)?)/i);
-      resolve(match ? match[1] : output);
-    });
-  });
+  const home = getKimiHome(env);
+  try {
+    const text = readFileSync(join(home, 'updates', 'latest.json'), 'utf8');
+    const data = JSON.parse(text);
+    return data.latest || data.version || data.manifest?.version || '';
+  } catch {
+    return '';
+  }
 }
 
 import { spawn } from 'node:child_process';
@@ -127,15 +118,16 @@ export async function startTui(options = {}) {
     }
     lockAcquired = true;
 
-    const [kimiVersion, kimiCodeStatus] = await Promise.all([
-      getKimiVersion(env),
-      checkKimiCodeVersion(env),
-    ]);
-    const ksmStatus = await checkKsmVersion(ROOT_DIR);
-
+    const kimiVersion = getKimiVersion(env);
     printWelcome(kimiVersion);
 
-    if (!kimiCodeStatus.installed) {
+    const versionPromise = Promise.all([
+      checkKimiCodeVersion(env),
+      checkKsmVersion(ROOT_DIR),
+    ]);
+
+    const initialCodeStatus = await checkKimiCodeVersion(env);
+    if (!initialCodeStatus.installed) {
       const shouldInstall = await select({
         message: 'Kimi Code 未安装，是否立即安装？',
         theme: QUIET_SELECT_THEME,
@@ -156,7 +148,7 @@ export async function startTui(options = {}) {
       }
     }
 
-    await mainMenu(env, { kimiCodeStatus, ksmStatus });
+    await mainMenu(env, { versionPromise, initialCodeStatus });
   } catch (err) {
     if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
       return;
@@ -170,32 +162,66 @@ export async function startTui(options = {}) {
   }
 }
 
-async function mainMenu(env, statuses = {}) {
-  const { kimiCodeStatus = {}, ksmStatus = {} } = statuses;
-  const updateHints = [];
-  if (kimiCodeStatus.hasUpdate) {
-    updateHints.push(chalk.yellow(`Kimi Code 有新版本可用: ${kimiCodeStatus.latest}`));
+async function mainMenu(env, options = {}) {
+  const { versionPromise, initialCodeStatus = {} } = options;
+  let messages = [];
+  let checked = false;
+  let pendingPromise = versionPromise || null;
+
+  function buildMessages(kimiCodeStatus, ksmStatus) {
+    const list = [];
+    if (!kimiCodeStatus.installed) {
+      list.push({ level: 'warning', text: 'Kimi Code 未安装' });
+    } else if (kimiCodeStatus.hasUpdate) {
+      list.push({ level: 'warning', text: `Kimi Code 有新版本可用: ${kimiCodeStatus.latest}` });
+    }
+    if (ksmStatus.hasUpdate) {
+      list.push({ level: 'warning', text: `ksm 有新版本可用: ${ksmStatus.latest}` });
+    }
+    return list;
   }
-  if (ksmStatus.hasUpdate) {
-    updateHints.push(chalk.yellow(`ksm 有新版本可用: ${ksmStatus.latest}`));
+
+  if (!pendingPromise) {
+    messages = buildMessages(initialCodeStatus, {});
   }
 
   while (true) {
-    const action = await select({
+    const kimiVersion = getKimiVersion(env);
+    printWelcome(kimiVersion, messages);
+
+    const prompt = select({
       message: '主菜单：',
       theme: QUIET_SELECT_THEME,
       choices: [
         { name: '继续最近会话', value: 'recent' },
-        {
-          name: '更新',
-          value: 'update',
-          description: updateHints.length > 0 ? updateHints.join(' | ') : undefined,
-        },
+        { name: '更新', value: 'update' },
+        { name: '查看历史消息', value: 'messages' },
         { name: '快捷设置', value: 'settings' },
         { name: '退出', value: 'exit' },
       ],
     });
-    clearLastLine();
+
+    if (pendingPromise && !checked) {
+      checked = true;
+      pendingPromise.then(([kimiCodeStatus, ksmStatus]) => {
+        messages = buildMessages(kimiCodeStatus, ksmStatus);
+        try { prompt.cancel(); } catch {}
+      }).catch(() => {
+        messages = [];
+      });
+      pendingPromise = null;
+    }
+
+    let action;
+    try {
+      action = await prompt;
+      clearLastLine();
+    } catch (err) {
+      if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
+        continue;
+      }
+      throw err;
+    }
 
     switch (action) {
       case 'recent':
@@ -203,6 +229,9 @@ async function mainMenu(env, statuses = {}) {
         break;
       case 'update':
         await updateMenu();
+        break;
+      case 'messages':
+        await messagesMenu(messages);
         break;
       case 'settings':
         await shortcutSettingsMenu();
@@ -378,6 +407,37 @@ async function projectMenu(project, env) {
       default:
         return;
     }
+  }
+}
+
+async function messagesMenu(messages) {
+  const choices = [
+    { name: '返回上一级', value: 'back' },
+    ...messages.map((msg, index) => ({
+      name: `${msg.time || '-'}  [${msg.level || 'info'}]  ${msg.text}`,
+      value: index,
+    })),
+  ];
+
+  if (messages.length === 0) {
+    console.log(chalk.yellow('暂无历史消息。'));
+    return;
+  }
+
+  const selected = await select({
+    message: '历史消息：',
+    theme: QUIET_SELECT_THEME,
+    choices,
+    pageSize: 15,
+  });
+  clearLastLine();
+  if (selected === 'back') return;
+
+  const msg = messages[selected];
+  if (msg) {
+    console.log(chalk.cyan(`时间: ${msg.time || '-'}`));
+    console.log(chalk.cyan(`级别: ${msg.level || 'info'}`));
+    console.log(chalk.cyan(`内容: ${msg.text}`));
   }
 }
 
