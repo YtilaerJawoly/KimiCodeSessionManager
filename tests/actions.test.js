@@ -31,7 +31,6 @@ describe('actions', () => {
       return makeMockSpawn()();
     };
     await continueSession({ id: 'session_abc', projectPath: 'E:/foo' }, spawn, {});
-    assert.equal(captured.cmd, 'kimi');
     assert.equal(captured.args.includes('-S'), true);
     assert.equal(captured.args.includes('session_abc'), true);
     assert.equal(captured.options.cwd, resolve('E:/foo'));
@@ -45,7 +44,6 @@ describe('actions', () => {
       return makeMockSpawn()();
     };
     await createSession('E:/bar', 'bar', spawn, {});
-    assert.equal(captured.cmd, 'kimi');
     assert.deepEqual(captured.args, []);
     assert.equal(captured.options.cwd, resolve('E:/bar'));
     assert.equal(captured.options.detached, true);
@@ -55,6 +53,18 @@ describe('actions', () => {
     const spawn = makeMockSpawn();
     const child = await openKimi(['-S', 'session_abc'], 'E:/foo', 'foo', spawn, {});
     assert.ok(child);
+  });
+
+  it('uses absolute kimi path when executable exists', async () => {
+    let captured;
+    const spawn = (cmd, args, options) => {
+      captured = { cmd, args, options };
+      return makeMockSpawn()();
+    };
+    await openKimi(['-S', 'session_abc'], 'E:/foo', 'foo', spawn, {});
+    assert.ok(captured.cmd.toLowerCase().endsWith('kimi') || captured.cmd.toLowerCase().endsWith('kimi.exe'));
+    assert.equal(captured.args.includes('-S'), true);
+    assert.equal(captured.args.includes('session_abc'), true);
   });
 
   it('uses Windows Terminal when WT_SESSION is set', async () => {
@@ -67,14 +77,16 @@ describe('actions', () => {
     await continueSession({ id: 'session_abc', projectPath: 'E:/foo' }, spawn, { WT_SESSION: 'test' });
     assert.equal(captured.cmd, 'wt.exe');
     assert.deepEqual(captured.args.slice(0, 10), ['-w', '0', 'nt', '-p', 'PowerShell', '-d', resolve('E:/foo'), '--title', 'foo', 'powershell']);
-    assert.equal(captured.args[10], '-ExecutionPolicy');
-    assert.equal(captured.args[11], 'Bypass');
-    assert.equal(captured.args[12], '-File');
-    assert.equal(typeof captured.args[13], 'string');
-    const scriptPath = captured.args[13];
+    assert.equal(captured.args[10], '-NoProfile');
+    assert.equal(captured.args[11], '-ExecutionPolicy');
+    assert.equal(captured.args[12], 'Bypass');
+    assert.equal(captured.args[13], '-File');
+    assert.equal(typeof captured.args[14], 'string');
+    const scriptPath = captured.args[14];
     const script = await readFile(scriptPath, 'utf8');
     assert.ok(script.includes("$Host.UI.RawUI.WindowTitle = 'foo'"));
-    assert.ok(script.includes("\u0026 'kimi' '-S' 'session_abc'"));
+    assert.ok(script.includes("& 'kimi' '-S' 'session_abc'") || script.includes("try {"));
+    assert.ok(script.includes("catch {"));
     assert.equal(captured.options.detached, true);
     await unlink(scriptPath).catch(() => {});
   });

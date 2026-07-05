@@ -1,8 +1,13 @@
 import { spawn } from 'node:child_process';
-import { platform } from 'node:os';
-import { resolve as pathResolve } from 'node:path';
-import { writeFile, unlink } from 'node:fs/promises';
+import { platform, homedir } from 'node:os';
+import { resolve as pathResolve, join, delimiter } from 'node:path';
+import { writeFile, unlink, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+const writeFileAsync = promisify(writeFile);
+const unlinkAsync = promisify(unlink);
+const existsAsync = (p) => Promise.resolve(existsSync(p));
 
 export function continueSession(session, spawner, env = process.env) {
   return openKimi(['-S', session.id], session.projectPath, session.projectName, spawner, env);
@@ -10,6 +15,30 @@ export function continueSession(session, spawner, env = process.env) {
 
 export function createSession(projectPath, projectName, spawner, env = process.env) {
   return openKimi([], projectPath, projectName, spawner, env);
+}
+
+function findKimiExecutable(env = process.env) {
+  const candidates = [];
+  if (env.KIMI_HOME) {
+    candidates.push(join(env.KIMI_HOME, 'bin', 'kimi.exe'));
+    candidates.push(join(env.KIMI_HOME, 'bin', 'kimi'));
+  }
+  candidates.push(join(homedir(), '.kimi-code', 'bin', 'kimi.exe'));
+  candidates.push(join(homedir(), '.kimi-code', 'bin', 'kimi'));
+
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+
+  const pathDirs = (env.PATH || '').split(delimiter).filter(Boolean);
+  const extensions = platform() === 'win32' ? ['.exe', '.cmd', '.bat', ''] : [''];
+  for (const dir of pathDirs) {
+    for (const ext of extensions) {
+      const p = join(dir, 'kimi' + ext);
+      if (existsSync(p)) return p;
+    }
+  }
+  return 'kimi';
 }
 
 function useWindowsTerminal(env = process.env) {
@@ -27,16 +56,18 @@ export async function openKimi(args, cwd, projectName, spawner = spawn, env = pr
   const inWt = useWindowsTerminal(env);
   const cwdResolved = pathResolve(cwd);
   const title = getProjectName(cwdResolved, projectName);
+  const kimiPath = findKimiExecutable(env);
   let cmd, cmdArgs, options;
+  let scriptPath;
 
   if (inWt) {
-    const scriptPath = await createTempPowerShellScript(cwdResolved, title, args);
+    scriptPath = await createTempPowerShellScript(cwdResolved, title, args, kimiPath);
     cmd = 'wt.exe';
-    cmdArgs = ['-w', '0', 'nt', '-p', 'PowerShell', '-d', cwdResolved, '--title', title, 'powershell', '-ExecutionPolicy', 'Bypass', '-File', scriptPath];
+    cmdArgs = ['-w', '0', 'nt', '-p', 'PowerShell', '-d', cwdResolved, '--title', title, 'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath];
     options = { detached: true, stdio: 'ignore' };
   } else {
     const isWin = platform() === 'win32';
-    cmd = 'kimi';
+    cmd = kimiPath;
     cmdArgs = args;
     options = { cwd: cwdResolved, detached: true, stdio: 'ignore', windowsHide: isWin };
   }
@@ -48,6 +79,7 @@ export async function openKimi(args, cwd, projectName, spawner = spawn, env = pr
     child.on('error', (err) => {
       if (settled) return;
       settled = true;
+      cleanupTempScript(scriptPath).catch(() => {});
       reject(new Error(`无法启动 Kimi Code (${cmd} ${cmdArgs.join(' ')}): ${err.message}`));
     });
 
@@ -60,25 +92,33 @@ export async function openKimi(args, cwd, projectName, spawner = spawn, env = pr
   });
 }
 
-async function createTempPowerShellScript(cwd, title, args) {
+async function createTempPowerShellScript(cwd, title, args, kimiPath) {
   const safeCwd = cwd.replace(/'/g, "''");
   const safeTitle = title.replace(/'/g, "''");
+  const safeKimi = kimiPath.replace(/'/g, "''");
   const safeArgs = args.map(a => typeof a === 'string' ? `'${a.replace(/'/g, "''")}'` : `'${String(a).replace(/'/g, "''")}'`).join(' ');
   const script = `
 Set-Location '${safeCwd}'
-Start-Sleep -Seconds 2
 $Host.UI.RawUI.WindowTitle = '${safeTitle}'
-& 'kimi' ${safeArgs}
+try {
+  & '${safeKimi}' ${safeArgs}
+} catch {
+  Write-Host '启动 Kimi Code 失败：' -ForegroundColor Red
+  Write-Host $_.Exception.Message -ForegroundColor Red
+  Read-Host '按 Enter 键退出'
+} finally {
+  Remove-Item -LiteralPath '$PSCommandPath' -ErrorAction SilentlyContinue
+}
 `;
   const tmpDir = pathResolve(fileURLToPath(import.meta.url), '..', '..', 'tmp');
   const tmpFile = pathResolve(tmpDir, `ksm-launcher-${Date.now()}.ps1`);
-  await writeFile(tmpFile, script, 'utf8');
+  await writeFileAsync(tmpFile, script, 'utf8');
   return tmpFile;
 }
 
 export async function cleanupTempScript(scriptPath) {
   try {
-    await unlink(scriptPath);
+    await unlinkAsync(scriptPath);
   } catch {
     // ignore
   }

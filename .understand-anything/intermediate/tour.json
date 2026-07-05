@@ -1,0 +1,64 @@
+[
+  {
+    "order": 1,
+    "title": "CLI 入口：从命令行启动 KSM",
+    "description": "一切从 bin/ksm.js 开始。它使用 commander 解析命令行参数（如 --home 指定 Kimi 主目录），读取 package.json 版本信息，然后调用 startTui 进入交互界面。",
+    "nodeIds": ["file:bin/ksm.js"]
+  },
+  {
+    "order": 2,
+    "title": "交互式 TUI：菜单与流程调度",
+    "description": "src/tui.js 是文本交互界面的核心，负责渲染欢迎页、主菜单、项目选择、历史会话列表、清理与设置等流程。它整合所有下层模块，将用户选择分发到对应动作。",
+    "nodeIds": ["file:src/tui.js"]
+  },
+  {
+    "order": 3,
+    "title": "数据加载与聚合：扫描并整理会话",
+    "description": "src/loader.js 从 session_index.jsonl 和 sessions 目录扫描 Kimi 会话状态；src/store.js 将其按项目分组、排序，并提供 ID 与路径查询能力，为 TUI 展示提供结构化数据。",
+    "nodeIds": ["file:src/loader.js", "file:src/store.js"]
+  },
+  {
+    "order": 4,
+    "title": "业务动作与会话清理：启动、删除与归档",
+    "description": "src/actions.js 负责继续或新建 Kimi Code 会话，并支持 Windows Terminal 集成；src/cleanup.js 提供删除、归档会话及维护会话索引的能力。",
+    "nodeIds": ["file:src/actions.js", "file:src/cleanup.js"]
+  },
+  {
+    "order": 5,
+    "title": "配置与实例锁：管理 KIMI_HOME 与单实例",
+    "description": "src/config.js 定义 KIMI_HOME 路径，读写 ksm-config.json 保存用户配置，并通过 PID 文件实现进程级实例锁，防止 KSM 被重复启动。",
+    "nodeIds": ["file:src/config.js"]
+  },
+  {
+    "order": 6,
+    "title": "国际化：中英文运行时切换",
+    "description": "src/i18n.js 内置 zh-CN 与 en 两套文案，支持 setLocale / getLocale / t 等接口，在 TUI 运行期间根据用户偏好动态切换语言。",
+    "nodeIds": ["file:src/i18n.js"]
+  },
+  {
+    "order": 7,
+    "title": "单元测试：保障核心模块行为稳定",
+    "description": "tests 目录覆盖了 actions、cleanup、loader、store、updater、i18n 与 config 的锁功能。阅读测试用例能快速理解各模块的预期输入输出与边界处理。",
+    "nodeIds": [
+      "file:tests/actions.test.js",
+      "file:tests/cleanup.test.js",
+      "file:tests/i18n.test.js",
+      "file:tests/loader.test.js",
+      "file:tests/lock.test.js",
+      "file:tests/store.test.js",
+      "file:tests/updater.test.js"
+    ]
+  },
+  {
+    "order": 8,
+    "title": "文档与启动脚本：安装、使用与跨平台启动",
+    "description": "README.md 与 README_English.md 记录功能、安装与目录结构；start.ps1 与 start.sh 分别用于 Windows 和类 Unix 系统一键启动；scripts/start.cs 提供 Windows 可执行包装器。",
+    "nodeIds": [
+      "file:README.md",
+      "file:README_English.md",
+      "file:start.ps1",
+      "file:start.sh",
+      "file:scripts/start.cs"
+    ]
+  }
+]

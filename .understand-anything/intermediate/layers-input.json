@@ -1,0 +1,1714 @@
+{
+  "nodes": [
+    {
+      "id": "file:.gitattributes",
+      "type": "config",
+      "name": ".gitattributes",
+      "filePath": ".gitattributes",
+      "summary": "Git 文本文件自动处理配置，启用 LF 行尾规范化。",
+      "tags": [
+        "git",
+        "line-ending",
+        "lf-normalization"
+      ]
+    },
+    {
+      "id": "file:.gitignore",
+      "type": "config",
+      "name": ".gitignore",
+      "filePath": ".gitignore",
+      "summary": "Git 忽略规则，排除 tmp、node_modules 和日志文件。",
+      "tags": [
+        "git",
+        "ignore",
+        "tmp",
+        "node_modules"
+      ]
+    },
+    {
+      "id": "file:LICENSE",
+      "type": "document",
+      "name": "LICENSE",
+      "filePath": "LICENSE",
+      "summary": "MIT 许可证全文，声明版权与使用条款。",
+      "tags": [
+        "license",
+        "mit",
+        "legal"
+      ]
+    },
+    {
+      "id": "file:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "中文项目说明文档，介绍 Kimi Code Session Manager 的功能、安装、使用、目录结构与依赖。",
+      "tags": [
+        "readme",
+        "zh-cn",
+        "documentation"
+      ]
+    },
+    {
+      "id": "file:README_English.md",
+      "type": "document",
+      "name": "README_English.md",
+      "filePath": "README_English.md",
+      "summary": "英文项目说明文档，与 README.md 内容对应。",
+      "tags": [
+        "readme",
+        "en",
+        "documentation"
+      ]
+    },
+    {
+      "id": "file:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "Node.js 项目清单，定义包名、版本、入口脚本、依赖、引擎约束与发布文件。",
+      "tags": [
+        "npm",
+        "manifest",
+        "dependencies",
+        "config"
+      ]
+    },
+    {
+      "id": "file:start.ps1",
+      "type": "file",
+      "name": "start.ps1",
+      "filePath": "start.ps1",
+      "summary": "Windows PowerShell 启动脚本，切换到脚本目录并启动 node bin/ksm.js。",
+      "tags": [
+        "powershell",
+        "windows",
+        "launcher"
+      ]
+    },
+    {
+      "id": "file:start.sh",
+      "type": "file",
+      "name": "start.sh",
+      "filePath": "start.sh",
+      "summary": "类 Unix shell 启动脚本：切换脚本目录后执行 node bin/ksm.js。",
+      "tags": [
+        "bash",
+        "unix",
+        "launcher"
+      ]
+    },
+    {
+      "id": "file:bin/ksm.js",
+      "type": "file",
+      "name": "bin/ksm.js",
+      "filePath": "bin/ksm.js",
+      "summary": "Kimi Code Session Manager 的 CLI 入口文件，基于 commander 解析命令行参数并启动 TUI。",
+      "tags": [
+        "cli",
+        "entry",
+        "commander",
+        "tui"
+      ]
+    },
+    {
+      "id": "file:scripts/start.cs",
+      "type": "file",
+      "name": "scripts/start.cs",
+      "filePath": "scripts/start.cs",
+      "summary": "Windows 可执行包装器的 C# 源文件，用于定位并启动同目录下的 start.ps1。",
+      "tags": [
+        "csharp",
+        "windows",
+        "launcher",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:src/actions.js",
+      "type": "file",
+      "name": "src/actions.js",
+      "filePath": "src/actions.js",
+      "summary": "负责启动 Kimi Code 会话的核心动作模块，支持继续已有会话、新建会话及 Windows Terminal 集成。",
+      "tags": [
+        "actions",
+        "spawn",
+        "kimi",
+        "windows-terminal",
+        "tested"
+      ]
+    },
+    {
+      "id": "file:src/cleanup.js",
+      "type": "file",
+      "name": "src/cleanup.js",
+      "filePath": "src/cleanup.js",
+      "summary": "会话清理模块，提供删除会话和归档会话功能，并维护 session_index.jsonl 索引。",
+      "tags": [
+        "cleanup",
+        "archive",
+        "delete",
+        "index",
+        "tested"
+      ]
+    },
+    {
+      "id": "file:src/config.js",
+      "type": "file",
+      "name": "src/config.js",
+      "filePath": "src/config.js",
+      "summary": "配置与单实例锁管理模块，定义 KIMI_HOME 路径、读写 ksm-config.json、实现进程级实例锁。",
+      "tags": [
+        "config",
+        "lock",
+        "KIMI_HOME",
+        "paths",
+        "tested"
+      ]
+    },
+    {
+      "id": "file:src/i18n.js",
+      "type": "file",
+      "name": "src/i18n.js",
+      "filePath": "src/i18n.js",
+      "summary": "国际化模块，内置 zh-CN 与 en 两套文案，支持运行时语言切换与占位符替换。",
+      "tags": [
+        "i18n",
+        "locale",
+        "zh-cn",
+        "en",
+        "tested"
+      ]
+    },
+    {
+      "id": "file:src/loader.js",
+      "type": "file",
+      "name": "src/loader.js",
+      "filePath": "src/loader.js",
+      "summary": "会话加载模块，从 session_index.jsonl 和 sessions 目录扫描并解析 Kimi 会话状态。",
+      "tags": [
+        "loader",
+        "sessions",
+        "state",
+        "scan",
+        "tested"
+      ]
+    },
+    {
+      "id": "file:src/shortcut.js",
+      "type": "file",
+      "name": "src/shortcut.js",
+      "filePath": "src/shortcut.js",
+      "summary": "Windows 桌面快捷方式创建模块，通过 PowerShell 与 WScript.Shell 生成 .lnk。",
+      "tags": [
+        "shortcut",
+        "windows",
+        "desktop",
+        "powershell"
+      ]
+    },
+    {
+      "id": "file:src/store.js",
+      "type": "file",
+      "name": "src/store.js",
+      "filePath": "src/store.js",
+      "summary": "会话聚合与查询模块，将会话列表按项目分组、排序并提供 ID 与路径查找能力。",
+      "tags": [
+        "store",
+        "project",
+        "group",
+        "query",
+        "tested"
+      ]
+    },
+    {
+      "id": "file:src/tui.js",
+      "type": "file",
+      "name": "src/tui.js",
+      "filePath": "src/tui.js",
+      "summary": "文本交互界面主模块，实现欢迎页、主菜单、项目选择、历史会话、清理与设置等菜单流程。",
+      "tags": [
+        "tui",
+        "menu",
+        "inquirer",
+        "chalk",
+        "fuse"
+      ]
+    },
+    {
+      "id": "file:src/updater.js",
+      "type": "file",
+      "name": "src/updater.js",
+      "filePath": "src/updater.js",
+      "summary": "更新检查与执行模块，支持 Kimi Code 安装/更新以及 ksm 自身的 git pull 更新。",
+      "tags": [
+        "updater",
+        "git",
+        "powershell",
+        "version",
+        "tested"
+      ]
+    },
+    {
+      "id": "file:tests/actions.test.js",
+      "type": "file",
+      "name": "tests/actions.test.js",
+      "filePath": "tests/actions.test.js",
+      "summary": "actions.js 的测试文件，覆盖 continueSession、createSession、openKimi 及 Windows Terminal 分支。",
+      "tags": [
+        "test",
+        "actions",
+        "mock",
+        "spawn"
+      ]
+    },
+    {
+      "id": "file:tests/cleanup.test.js",
+      "type": "file",
+      "name": "tests/cleanup.test.js",
+      "filePath": "tests/cleanup.test.js",
+      "summary": "cleanup.js 的测试文件，验证删除、归档会话及索引维护行为。",
+      "tags": [
+        "test",
+        "cleanup",
+        "archive",
+        "delete"
+      ]
+    },
+    {
+      "id": "file:tests/i18n.test.js",
+      "type": "file",
+      "name": "tests/i18n.test.js",
+      "filePath": "tests/i18n.test.js",
+      "summary": "i18n.js 的测试文件，检查语言列表、默认语言、文案取值与占位符回退。",
+      "tags": [
+        "test",
+        "i18n",
+        "locale"
+      ]
+    },
+    {
+      "id": "file:tests/loader.test.js",
+      "type": "file",
+      "name": "tests/loader.test.js",
+      "filePath": "tests/loader.test.js",
+      "summary": "loader.js 的测试文件，覆盖索引加载、目录扫描、去重与异常状态处理。",
+      "tags": [
+        "test",
+        "loader",
+        "sessions",
+        "state"
+      ]
+    },
+    {
+      "id": "file:tests/lock.test.js",
+      "type": "file",
+      "name": "tests/lock.test.js",
+      "filePath": "tests/lock.test.js",
+      "summary": "config.js 实例锁功能的测试文件，验证锁获取、PID 写入、过期锁覆盖与释放。",
+      "tags": [
+        "test",
+        "lock",
+        "config",
+        "pid"
+      ]
+    },
+    {
+      "id": "file:tests/store.test.js",
+      "type": "file",
+      "name": "tests/store.test.js",
+      "filePath": "tests/store.test.js",
+      "summary": "store.js 的测试文件，验证项目分组、排序、最新会话与查找函数。",
+      "tags": [
+        "test",
+        "store",
+        "project",
+        "query"
+      ]
+    },
+    {
+      "id": "file:tests/updater.test.js",
+      "type": "file",
+      "name": "tests/updater.test.js",
+      "filePath": "tests/updater.test.js",
+      "summary": "updater.js 的测试文件，覆盖 Kimi Code 更新、ksm git pull 与版本检查。",
+      "tags": [
+        "test",
+        "updater",
+        "git",
+        "version"
+      ]
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "项目清单文件，包含版本、入口、依赖与发布配置。",
+      "tags": [
+        "npm",
+        "manifest",
+        "version"
+      ]
+    },
+    {
+      "id": "config:ksm-config.json",
+      "type": "config",
+      "name": "ksm-config.json",
+      "summary": "ksm 用户配置文件，当前用于保存语言偏好。",
+      "tags": [
+        "config",
+        "locale",
+        "json"
+      ]
+    },
+    {
+      "id": "config:session_index.jsonl",
+      "type": "config",
+      "name": "session_index.jsonl",
+      "summary": "会话索引文件，每行一条 JSON 记录。",
+      "tags": [
+        "config",
+        "index",
+        "session"
+      ]
+    }
+  ],
+  "imports": [
+    {
+      "source": "file:bin/ksm.js",
+      "target": "file:src/tui.js"
+    },
+    {
+      "source": "file:bin/ksm.js",
+      "target": "module:commander"
+    },
+    {
+      "source": "file:bin/ksm.js",
+      "target": "module:node:fs"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:child_process"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:os"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:path"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:fs/promises"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:url"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "file:src/config.js"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "module:node:fs/promises"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "module:node:path"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "module:node:os"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "module:node:path"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "module:node:fs"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "file:src/config.js"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "module:node:fs/promises"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "module:node:path"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "module:node:child_process"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "module:node:os"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "module:node:path"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "module:node:fs"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/loader.js"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/store.js"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/actions.js"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/cleanup.js"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/updater.js"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/shortcut.js"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/config.js"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/i18n.js"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:node:fs"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:node:os"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:node:path"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:node:url"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:@inquirer/prompts"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:chalk"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:fuse.js"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "module:node:child_process"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "module:node:os"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "module:node:fs"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "module:node:path"
+    },
+    {
+      "source": "file:tests/actions.test.js",
+      "target": "file:src/actions.js"
+    },
+    {
+      "source": "file:tests/cleanup.test.js",
+      "target": "file:src/cleanup.js"
+    },
+    {
+      "source": "file:tests/i18n.test.js",
+      "target": "file:src/i18n.js"
+    },
+    {
+      "source": "file:tests/loader.test.js",
+      "target": "file:src/loader.js"
+    },
+    {
+      "source": "file:tests/lock.test.js",
+      "target": "file:src/config.js"
+    },
+    {
+      "source": "file:tests/store.test.js",
+      "target": "file:src/store.js"
+    },
+    {
+      "source": "file:tests/updater.test.js",
+      "target": "file:src/updater.js"
+    }
+  ],
+  "all": [
+    {
+      "source": "file:README.md",
+      "target": "concept:project",
+      "type": "documents"
+    },
+    {
+      "source": "file:README_English.md",
+      "target": "concept:project",
+      "type": "documents"
+    },
+    {
+      "source": "file:LICENSE",
+      "target": "concept:license-mit",
+      "type": "documents"
+    },
+    {
+      "source": "concept:project",
+      "target": "concept:license-mit",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:package.json",
+      "target": "concept:project",
+      "type": "configures"
+    },
+    {
+      "source": "file:package.json",
+      "target": "module:bin/ksm.js",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:start.ps1",
+      "target": "module:bin/ksm.js",
+      "type": "deploys"
+    },
+    {
+      "source": "file:start.sh",
+      "target": "module:bin/ksm.js",
+      "type": "deploys"
+    },
+    {
+      "source": "file:README.md",
+      "target": "file:README_English.md",
+      "type": "related"
+    },
+    {
+      "source": "file:.gitignore",
+      "target": "concept:project",
+      "type": "configures"
+    },
+    {
+      "source": "file:.gitattributes",
+      "target": "concept:project",
+      "type": "configures"
+    },
+    {
+      "source": "file:bin/ksm.js",
+      "target": "file:src/tui.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:bin/ksm.js",
+      "target": "module:commander",
+      "type": "imports"
+    },
+    {
+      "source": "file:bin/ksm.js",
+      "target": "module:node:fs",
+      "type": "imports"
+    },
+    {
+      "source": "file:scripts/start.cs",
+      "target": "file:start.ps1",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:child_process",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:os",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:path",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:fs/promises",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "module:node:url",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "file:src/config.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "module:node:fs/promises",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "module:node:path",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "module:node:os",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "module:node:path",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "module:node:fs",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "file:src/config.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "module:node:fs/promises",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "module:node:path",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "module:node:child_process",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "module:node:os",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "module:node:path",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "module:node:fs",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/loader.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/store.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/actions.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/cleanup.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/updater.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/shortcut.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/config.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "file:src/i18n.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:node:fs",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:node:os",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:node:path",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:node:url",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:@inquirer/prompts",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:chalk",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "module:fuse.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "module:node:child_process",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "module:node:os",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "module:node:fs",
+      "type": "imports"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "module:node:path",
+      "type": "imports"
+    },
+    {
+      "source": "file:tests/actions.test.js",
+      "target": "file:src/actions.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:tests/cleanup.test.js",
+      "target": "file:src/cleanup.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:tests/i18n.test.js",
+      "target": "file:src/i18n.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:tests/loader.test.js",
+      "target": "file:src/loader.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:tests/lock.test.js",
+      "target": "file:src/config.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:tests/store.test.js",
+      "target": "file:src/store.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:tests/updater.test.js",
+      "target": "file:src/updater.js",
+      "type": "imports"
+    },
+    {
+      "source": "file:bin/ksm.js",
+      "target": "function:bin/ksm.js:runCli",
+      "type": "contains"
+    },
+    {
+      "source": "file:scripts/start.cs",
+      "target": "function:scripts/start.cs:Main",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "function:src/actions.js:continueSession",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "function:src/actions.js:createSession",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "function:src/actions.js:openKimi",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "function:src/actions.js:useWindowsTerminal",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "function:src/actions.js:getProjectName",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "function:src/actions.js:createTempPowerShellScript",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "function:src/actions.js:cleanupTempScript",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "function:src/cleanup.js:deleteSession",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "function:src/cleanup.js:archiveSession",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "function:src/cleanup.js:removeFromIndex",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "function:src/config.js:getKimiHome",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "function:src/config.js:getPaths",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "function:src/config.js:loadKsmConfig",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "function:src/config.js:saveKsmConfig",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "function:src/config.js:acquireInstanceLock",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "function:src/config.js:releaseInstanceLock",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/i18n.js",
+      "target": "function:src/i18n.js:setLocale",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/i18n.js",
+      "target": "function:src/i18n.js:getLocale",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/i18n.js",
+      "target": "function:src/i18n.js:t",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/i18n.js",
+      "target": "function:src/i18n.js:listLocales",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "function:src/loader.js:loadSessions",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "function:src/loader.js:readState",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "function:src/loader.js:buildSession",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "function:src/loader.js:inferWorkDir",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "function:src/loader.js:getTime",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "function:src/shortcut.js:createDesktopShortcut",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "function:src/shortcut.js:dirname",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/store.js",
+      "target": "function:src/store.js:dateOrMin",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/store.js",
+      "target": "function:src/store.js:compareDate",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/store.js",
+      "target": "function:src/store.js:buildProjects",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/store.js",
+      "target": "function:src/store.js:getLatestSession",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/store.js",
+      "target": "function:src/store.js:findSessionById",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/store.js",
+      "target": "function:src/store.js:findProjectByPath",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:clearLastLine",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:printWelcome",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:getKimiHome",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:getKimiVersion",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:padEnd",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:stringWidth",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:startTui",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:mainMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:updateMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:languageMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:shortcutSettingsMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:recentSessionsMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:projectMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:messagesMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:historyMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:cleanupMenu",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:truncate",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "function:src/tui.js:formatTime",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:getKimiHome",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:updateKimiCode",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:updateKsm",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:runPowerShellCommand",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:runCommand",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:checkKimiCodeVersion",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:readLatestJson",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:getKimiExecutableVersion",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:checkKsmVersion",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:readCurrentKsmVersion",
+      "type": "contains"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "function:src/updater.js:getRemoteKsmVersion",
+      "type": "contains"
+    },
+    {
+      "source": "function:bin/ksm.js:runCli",
+      "target": "function:src/tui.js:startTui",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/actions.js:continueSession",
+      "target": "function:src/actions.js:openKimi",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/actions.js:createSession",
+      "target": "function:src/actions.js:openKimi",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/actions.js:openKimi",
+      "target": "function:src/actions.js:useWindowsTerminal",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/actions.js:openKimi",
+      "target": "function:src/actions.js:getProjectName",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/actions.js:openKimi",
+      "target": "function:src/actions.js:createTempPowerShellScript",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/cleanup.js:deleteSession",
+      "target": "function:src/config.js:getPaths",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/cleanup.js:deleteSession",
+      "target": "function:src/cleanup.js:removeFromIndex",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/cleanup.js:archiveSession",
+      "target": "function:src/config.js:getPaths",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/cleanup.js:archiveSession",
+      "target": "function:src/cleanup.js:removeFromIndex",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/config.js:getPaths",
+      "target": "function:src/config.js:getKimiHome",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/config.js:loadKsmConfig",
+      "target": "function:src/config.js:getPaths",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/config.js:saveKsmConfig",
+      "target": "function:src/config.js:getPaths",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/config.js:acquireInstanceLock",
+      "target": "function:src/config.js:getPaths",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/config.js:releaseInstanceLock",
+      "target": "function:src/config.js:getPaths",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/loader.js:loadSessions",
+      "target": "function:src/config.js:getPaths",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/loader.js:loadSessions",
+      "target": "function:src/loader.js:readState",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/loader.js:loadSessions",
+      "target": "function:src/loader.js:buildSession",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/loader.js:buildSession",
+      "target": "function:src/loader.js:inferWorkDir",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/loader.js:loadSessions",
+      "target": "function:src/loader.js:getTime",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/store.js:buildProjects",
+      "target": "function:src/store.js:compareDate",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/store.js:compareDate",
+      "target": "function:src/store.js:dateOrMin",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/config.js:acquireInstanceLock",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/config.js:loadKsmConfig",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/i18n.js:setLocale",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/tui.js:getKimiVersion",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/tui.js:printWelcome",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/updater.js:checkKimiCodeVersion",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/updater.js:updateKimiCode",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/tui.js:mainMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:startTui",
+      "target": "function:src/config.js:releaseInstanceLock",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:mainMenu",
+      "target": "function:src/tui.js:getKimiVersion",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:mainMenu",
+      "target": "function:src/tui.js:printWelcome",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:mainMenu",
+      "target": "function:src/tui.js:recentSessionsMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:mainMenu",
+      "target": "function:src/tui.js:updateMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:mainMenu",
+      "target": "function:src/tui.js:languageMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:mainMenu",
+      "target": "function:src/tui.js:messagesMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:mainMenu",
+      "target": "function:src/tui.js:shortcutSettingsMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:updateMenu",
+      "target": "function:src/updater.js:updateKsm",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:updateMenu",
+      "target": "function:src/updater.js:updateKimiCode",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:updateMenu",
+      "target": "function:src/tui.js:getKimiVersion",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:updateMenu",
+      "target": "function:src/tui.js:printWelcome",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:languageMenu",
+      "target": "function:src/i18n.js:getLocale",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:languageMenu",
+      "target": "function:src/i18n.js:setLocale",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:languageMenu",
+      "target": "function:src/config.js:saveKsmConfig",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:shortcutSettingsMenu",
+      "target": "function:src/shortcut.js:createDesktopShortcut",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:recentSessionsMenu",
+      "target": "function:src/loader.js:loadSessions",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:recentSessionsMenu",
+      "target": "function:src/store.js:buildProjects",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:recentSessionsMenu",
+      "target": "function:src/store.js:findProjectByPath",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:recentSessionsMenu",
+      "target": "function:src/tui.js:projectMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:projectMenu",
+      "target": "function:src/loader.js:loadSessions",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:projectMenu",
+      "target": "function:src/store.js:buildProjects",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:projectMenu",
+      "target": "function:src/store.js:findProjectByPath",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:projectMenu",
+      "target": "function:src/store.js:getLatestSession",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:projectMenu",
+      "target": "function:src/actions.js:continueSession",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:projectMenu",
+      "target": "function:src/tui.js:historyMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:projectMenu",
+      "target": "function:src/actions.js:createSession",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:projectMenu",
+      "target": "function:src/tui.js:cleanupMenu",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:historyMenu",
+      "target": "function:src/actions.js:continueSession",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:cleanupMenu",
+      "target": "function:src/cleanup.js:deleteSession",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:cleanupMenu",
+      "target": "function:src/cleanup.js:archiveSession",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:cleanupMenu",
+      "target": "function:src/loader.js:loadSessions",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:cleanupMenu",
+      "target": "function:src/store.js:buildProjects",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:cleanupMenu",
+      "target": "function:src/store.js:findProjectByPath",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:printWelcome",
+      "target": "function:src/i18n.js:t",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:printWelcome",
+      "target": "function:src/tui.js:stringWidth",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:padEnd",
+      "target": "function:src/tui.js:stringWidth",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/tui.js:formatTime",
+      "target": "function:src/i18n.js:getLocale",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/updater.js:updateKimiCode",
+      "target": "function:src/updater.js:runPowerShellCommand",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/updater.js:updateKsm",
+      "target": "function:src/updater.js:runCommand",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/updater.js:checkKimiCodeVersion",
+      "target": "function:src/updater.js:getKimiHome",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/updater.js:checkKimiCodeVersion",
+      "target": "function:src/updater.js:readLatestJson",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/updater.js:checkKimiCodeVersion",
+      "target": "function:src/updater.js:getKimiExecutableVersion",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/updater.js:checkKsmVersion",
+      "target": "function:src/updater.js:readCurrentKsmVersion",
+      "type": "calls"
+    },
+    {
+      "source": "function:src/updater.js:checkKsmVersion",
+      "target": "function:src/updater.js:getRemoteKsmVersion",
+      "type": "calls"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "file:tests/actions.test.js",
+      "type": "tested_by"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "file:tests/cleanup.test.js",
+      "type": "tested_by"
+    },
+    {
+      "source": "file:src/i18n.js",
+      "target": "file:tests/i18n.test.js",
+      "type": "tested_by"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "file:tests/loader.test.js",
+      "type": "tested_by"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "file:tests/lock.test.js",
+      "type": "tested_by"
+    },
+    {
+      "source": "file:src/store.js",
+      "target": "file:tests/store.test.js",
+      "type": "tested_by"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "file:tests/updater.test.js",
+      "type": "tested_by"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "concept:KIMI_HOME configuration",
+      "type": "configures"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "concept:KIMI_HOME configuration",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "concept:KIMI_HOME configuration",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "concept:KIMI_HOME configuration",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "concept:Session lifecycle",
+      "type": "related"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "concept:Session lifecycle",
+      "type": "related"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "concept:Session lifecycle",
+      "type": "related"
+    },
+    {
+      "source": "file:src/store.js",
+      "target": "concept:Project grouping",
+      "type": "related"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "concept:Project grouping",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "concept:Index file (JSONL)",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "concept:Index file (JSONL)",
+      "type": "configures"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "concept:Instance lock",
+      "type": "configures"
+    },
+    {
+      "source": "file:src/actions.js",
+      "target": "concept:Windows Terminal integration",
+      "type": "related"
+    },
+    {
+      "source": "file:src/shortcut.js",
+      "target": "concept:Desktop shortcut",
+      "type": "related"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "concept:Update mechanism",
+      "type": "related"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "concept:Update mechanism",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/i18n.js",
+      "target": "concept:i18n locales",
+      "type": "configures"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "concept:i18n locales",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/loader.js",
+      "target": "config:session_index.jsonl",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/cleanup.js",
+      "target": "config:session_index.jsonl",
+      "type": "configures"
+    },
+    {
+      "source": "file:src/config.js",
+      "target": "config:ksm-config.json",
+      "type": "configures"
+    },
+    {
+      "source": "file:src/tui.js",
+      "target": "config:ksm-config.json",
+      "type": "configures"
+    },
+    {
+      "source": "file:bin/ksm.js",
+      "target": "config:package.json",
+      "type": "depends_on"
+    },
+    {
+      "source": "file:src/updater.js",
+      "target": "config:package.json",
+      "type": "depends_on"
+    }
+  ]
+}

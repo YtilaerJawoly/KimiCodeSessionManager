@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "louvain",
+  "totalFiles": 26,
+  "totalBatches": 2,
+  "exportsByPath": {
+    "bin/ksm.js": [],
+    "src/actions.js": [
+      "continueSession",
+      "createSession",
+      "openKimi",
+      "cleanupTempScript"
+    ],
+    "src/cleanup.js": [
+      "deleteSession",
+      "archiveSession"
+    ],
+    "src/config.js": [
+      "getKimiHome",
+      "getPaths",
+      "loadKsmConfig",
+      "saveKsmConfig",
+      "acquireInstanceLock",
+      "releaseInstanceLock"
+    ],
+    "src/i18n.js": [
+      "setLocale",
+      "getLocale",
+      "t",
+      "listLocales"
+    ],
+    "src/loader.js": [
+      "loadSessions"
+    ],
+    "src/shortcut.js": [
+      "createDesktopShortcut"
+    ],
+    "src/store.js": [
+      "buildProjects",
+      "getLatestSession",
+      "findSessionById",
+      "findProjectByPath"
+    ],
+    "src/tui.js": [
+      "startTui"
+    ],
+    "src/updater.js": [
+      "getKimiHome",
+      "updateKimiCode",
+      "updateKsm",
+      "checkKimiCodeVersion",
+      "checkKsmVersion"
+    ],
+    "tests/actions.test.js": [],
+    "tests/cleanup.test.js": [],
+    "tests/i18n.test.js": [],
+    "tests/loader.test.js": [],
+    "tests/lock.test.js": [],
+    "tests/store.test.js": [],
+    "tests/updater.test.js": []
+  },
+  "batches": [
+    {
+      "batchIndex": 1,
+      "files": [
+        {
+          "path": ".gitattributes",
+          "sizeLines": 2,
+          "language": "gitattributes",
+          "fileCategory": "config"
+        },
+        {
+          "path": ".gitignore",
+          "sizeLines": 3,
+          "language": "gitignore",
+          "fileCategory": "config"
+        },
+        {
+          "path": "LICENSE",
+          "sizeLines": 21,
+          "language": "text",
+          "fileCategory": "docs"
+        },
+        {
+          "path": "README.md",
+          "sizeLines": 123,
+          "language": "markdown",
+          "fileCategory": "docs"
+        },
+        {
+          "path": "README_English.md",
+          "sizeLines": 123,
+          "language": "markdown",
+          "fileCategory": "docs"
+        },
+        {
+          "path": "package.json",
+          "sizeLines": 45,
+          "language": "json",
+          "fileCategory": "config"
+        },
+        {
+          "path": "start.ps1",
+          "sizeLines": 5,
+          "language": "powershell",
+          "fileCategory": "script"
+        },
+        {
+          "path": "start.sh",
+          "sizeLines": 4,
+          "language": "shell",
+          "fileCategory": "script"
+        }
+      ],
+      "batchImportData": {
+        ".gitattributes": [],
+        ".gitignore": [],
+        "LICENSE": [],
+        "README.md": [],
+        "README_English.md": [],
+        "package.json": [],
+        "start.ps1": [],
+        "start.sh": []
+      },
+      "neighborMap": {}
+    },
+    {
+      "batchIndex": 2,
+      "files": [
+        {
+          "path": "bin/ksm.js",
+          "sizeLines": 23,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "scripts/start.cs",
+          "sizeLines": 37,
+          "language": "csharp",
+          "fileCategory": "script"
+        },
+        {
+          "path": "src/actions.js",
+          "sizeLines": 85,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/cleanup.js",
+          "sizeLines": 54,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/config.js",
+          "sizeLines": 87,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/i18n.js",
+          "sizeLines": 189,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/loader.js",
+          "sizeLines": 88,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/shortcut.js",
+          "sizeLines": 46,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/store.js",
+          "sizeLines": 55,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/tui.js",
+          "sizeLines": 557,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "src/updater.js",
+          "sizeLines": 199,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/actions.test.js",
+          "sizeLines": 89,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/cleanup.test.js",
+          "sizeLines": 50,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/i18n.test.js",
+          "sizeLines": 47,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/loader.test.js",
+          "sizeLines": 119,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/lock.test.js",
+          "sizeLines": 70,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/store.test.js",
+          "sizeLines": 102,
+          "language": "javascript",
+          "fileCategory": "code"
+        },
+        {
+          "path": "tests/updater.test.js",
+          "sizeLines": 81,
+          "language": "javascript",
+          "fileCategory": "code"
+        }
+      ],
+      "batchImportData": {
+        "bin/ksm.js": [
+          "../src/tui.js"
+        ],
+        "scripts/start.cs": [],
+        "src/actions.js": [],
+        "src/cleanup.js": [
+          "./config.js"
+        ],
+        "src/config.js": [],
+        "src/i18n.js": [],
+        "src/loader.js": [
+          "./config.js"
+        ],
+        "src/shortcut.js": [],
+        "src/store.js": [],
+        "src/tui.js": [
+          "./loader.js",
+          "./store.js",
+          "./actions.js",
+          "./cleanup.js",
+          "./updater.js",
+          "./shortcut.js",
+          "./config.js",
+          "./i18n.js"
+        ],
+        "src/updater.js": [],
+        "tests/actions.test.js": [
+          "../src/actions.js"
+        ],
+        "tests/cleanup.test.js": [
+          "../src/cleanup.js"
+        ],
+        "tests/i18n.test.js": [
+          "../src/i18n.js"
+        ],
+        "tests/loader.test.js": [
+          "../src/loader.js"
+        ],
+        "tests/lock.test.js": [
+          "../src/config.js"
+        ],
+        "tests/store.test.js": [
+          "../src/store.js"
+        ],
+        "tests/updater.test.js": [
+          "../src/updater.js"
+        ]
+      },
+      "neighborMap": {}
+    }
+  ]
+}

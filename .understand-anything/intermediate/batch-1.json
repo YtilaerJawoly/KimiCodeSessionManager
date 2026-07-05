@@ -1,0 +1,118 @@
+{
+  "nodes": [
+    {
+      "id": "file:.gitattributes",
+      "type": "config",
+      "name": ".gitattributes",
+      "filePath": ".gitattributes",
+      "summary": "Git 文本文件自动处理配置，启用 LF 行尾规范化。",
+      "tags": ["git", "line-ending", "lf-normalization"],
+      "complexity": 1,
+      "languageNotes": "纯英文配置，无本地化内容。"
+    },
+    {
+      "id": "file:.gitignore",
+      "type": "config",
+      "name": ".gitignore",
+      "filePath": ".gitignore",
+      "summary": "Git 忽略规则，排除 tmp、node_modules 和日志文件。",
+      "tags": ["git", "ignore", "tmp", "node_modules"],
+      "complexity": 1,
+      "languageNotes": "纯英文配置，无本地化内容。"
+    },
+    {
+      "id": "file:LICENSE",
+      "type": "document",
+      "name": "LICENSE",
+      "filePath": "LICENSE",
+      "summary": "MIT 许可证全文，声明版权与使用条款。",
+      "tags": ["license", "mit", "legal"],
+      "complexity": 1,
+      "languageNotes": "英文法律文本，未翻译。"
+    },
+    {
+      "id": "file:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "中文项目说明文档，介绍 Kimi Code Session Manager 的功能、安装、使用、目录结构与依赖。",
+      "tags": ["readme", "zh-cn", "documentation"],
+      "complexity": 2,
+      "languageNotes": "简体中文文档；技术术语如 CLI/TUI、Kimi Code、ksm 保留英文。"
+    },
+    {
+      "id": "file:README_English.md",
+      "type": "document",
+      "name": "README_English.md",
+      "filePath": "README_English.md",
+      "summary": "英文项目说明文档，与 README.md 内容对应。",
+      "tags": ["readme", "en", "documentation"],
+      "complexity": 2,
+      "languageNotes": "英文文档，与中文 README 互为翻译。"
+    },
+    {
+      "id": "file:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "Node.js 项目清单，定义包名、版本、入口脚本、依赖、引擎约束与发布文件。",
+      "tags": ["npm", "manifest", "dependencies", "config"],
+      "complexity": 2,
+      "languageNotes": "标准 npm JSON，字段名与脚本使用英文。"
+    },
+    {
+      "id": "file:start.ps1",
+      "type": "script",
+      "name": "start.ps1",
+      "filePath": "start.ps1",
+      "summary": "Windows PowerShell 启动脚本，切换到脚本目录并启动 node bin\\ksm.js。",
+      "tags": ["powershell", "windows", "launcher"],
+      "complexity": 1,
+      "languageNotes": "PowerShell 命令，注释与变量名为英文。"
+    },
+    {
+      "id": "file:start.sh",
+      "type": "script",
+      "name": "start.sh",
+      "filePath": "start.sh",
+      "summary": "类 Unix shell 启动脚本，切换到脚本所在目录并运行 node bin/ksm.js。",
+      "tags": ["bash", "unix", "launcher"],
+      "complexity": 1,
+      "languageNotes": "Bash 脚本，shebang 与命令为英文。"
+    },
+    {
+      "id": "concept:project",
+      "type": "concept",
+      "name": "Kimi Code Session Manager",
+      "summary": "一个用于管理和快速恢复 Kimi Code 会话的 Node.js CLI/TUI 工具。",
+      "tags": ["kimi-code", "session-manager", "cli", "tui"]
+    },
+    {
+      "id": "concept:license-mit",
+      "type": "concept",
+      "name": "MIT License",
+      "summary": "MIT 开源许可证，允许自由使用、修改和分发软件。",
+      "tags": ["license", "mit", "open-source"]
+    },
+    {
+      "id": "module:bin/ksm.js",
+      "type": "module",
+      "name": "ksm CLI entry",
+      "summary": "bin/ksm.js 是 package.json 中声明的 ksm 命令入口，被启动脚本调用。",
+      "tags": ["cli", "entry", "bin"]
+    }
+  ],
+  "edges": [
+    { "source": "file:README.md", "target": "concept:project", "type": "documents", "weight": 1.0 },
+    { "source": "file:README_English.md", "target": "concept:project", "type": "documents", "weight": 1.0 },
+    { "source": "file:LICENSE", "target": "concept:license-mit", "type": "documents", "weight": 1.0 },
+    { "source": "concept:project", "target": "concept:license-mit", "type": "depends_on", "weight": 0.8 },
+    { "source": "file:package.json", "target": "concept:project", "type": "configures", "weight": 1.0 },
+    { "source": "file:package.json", "target": "module:bin/ksm.js", "type": "depends_on", "weight": 1.0 },
+    { "source": "file:start.ps1", "target": "module:bin/ksm.js", "type": "deploys", "weight": 1.0 },
+    { "source": "file:start.sh", "target": "module:bin/ksm.js", "type": "deploys", "weight": 1.0 },
+    { "source": "file:README.md", "target": "file:README_English.md", "type": "related", "weight": 0.9 },
+    { "source": "file:.gitignore", "target": "concept:project", "type": "configures", "weight": 0.6 },
+    { "source": "file:.gitattributes", "target": "concept:project", "type": "configures", "weight": 0.6 }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "issues": [
+    "节点 file:start.sh 的类型为 \"script\"，不在允许的 schema 类型列表中，建议转换为 \"file\"。"
+  ],
+  "warnings": [
+    "25 个节点的 complexity 原值为 None，已由合并脚本默认填充为 \"moderate\"，建议后续生成批次直接提供复杂度评估，减少默认值依赖。"
+  ],
+  "notes": [
+    "节点 ID 唯一且格式规范：共 115 个节点，0 个重复，0 个格式异常。",
+    "边引用完整：共 229 条边，source/target 均指向存在的节点，0 个引用缺失。",
+    "所有 file 节点均包含有效的 filePath，且路径均对应仓库中的实际文件。",
+    "所有节点均包含非空 summary 和 tags。",
+    "边字段完整有效：source/target/type/weight/direction 均无缺失，weight 均在 [0,1] 范围内，direction 取值合规。",
+    "7 个生产源码节点（src/actions.js、cleanup.js、config.js、i18n.js、loader.js、store.js、updater.js）均带有 tested 标签，并通过 tested_by 边与对应测试文件关联。",
+    "跨批次边共 6 条，语义均合理：batch 1 的 package.json/start.ps1/start.sh 指向 batch 2 的 bin/ksm.js；batch 2 的 start.cs 依赖 batch 1 的 start.ps1；batch 2 的 bin/ksm.js 与 updater.js 读取 batch 1 的 package.json。"
+  ]
+}
