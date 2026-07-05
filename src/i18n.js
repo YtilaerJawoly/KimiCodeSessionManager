@@ -1,3 +1,16 @@
+/**
+ * 国际化模块
+ *
+ * 职责：
+ *   1. 管理当前语言（zh-CN / en）。
+ *   2. 提供翻译函数 t(key, placeholders) 并支持占位符替换。
+ *   3. 在翻译缺失时按 zh-CN → key 本身回退，保证界面不报错。
+ *
+ * 设计原则：
+ *   - 所有用户可见文案集中在此，便于多语言维护。
+ *   - setLocale 对未知语言静默忽略，保持当前语言稳定。
+ */
+
 const locales = {
   'zh-CN': {
     'welcome.title': 'Kimi Code Session Manager {version}',

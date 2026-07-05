@@ -2,6 +2,24 @@ import { rename, rm, readFile, writeFile, mkdir, access, constants } from 'node:
 import { join, normalize } from 'node:path';
 import { getPaths } from './config.js';
 
+/**
+ * 会话清理模块
+ *
+ * 职责：
+ *   1. 删除指定会话（释放磁盘空间）。
+ *   2. 归档指定会话（移动到 session-manager-archive 目录）。
+ *   3. 从 session_index.jsonl 中移除被删除/归档的会话记录。
+ *
+ * 设计原则：
+ *   - 先操作文件系统，再更新索引；索引更新失败不会导致目录操作回滚，
+ *     但错误会抛出，供上层显示。
+ *   - 归档时若源目录不存在，给出明确错误，避免误删。
+ *   - 索引更新采用“写临时文件 + 重命名”的方式，降低写坏风险。
+ */
+
+/**
+ * 删除会话目录，并从索引中移除对应记录。
+ */
 export async function deleteSession(session, env = process.env) {
   const { indexFile } = getPaths(env);
   try {
@@ -12,6 +30,9 @@ export async function deleteSession(session, env = process.env) {
   }
 }
 
+/**
+ * 归档会话：将目录移动到 archive 目录，并从索引中移除。
+ */
 export async function archiveSession(session, env = process.env) {
   const { archiveDir, indexFile } = getPaths(env);
   try {
@@ -30,6 +51,11 @@ export async function archiveSession(session, env = process.env) {
   }
 }
 
+/**
+ * 从索引文件中删除指定会话记录。
+ *
+ * 使用临时文件 + rename 实现原子覆盖，避免直接写坏索引。
+ */
 async function removeFromIndex(indexFile, sessionId, sessionDir) {
   let text = '';
   try {
