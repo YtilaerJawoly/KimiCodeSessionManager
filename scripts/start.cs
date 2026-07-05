@@ -16,12 +16,16 @@ class Program
             return 1;
         }
 
-        ProcessStartInfo psi = new ProcessStartInfo();
-        psi.FileName = "powershell.exe";
-        psi.Arguments = "-ExecutionPolicy Bypass -NoProfile -File \"" + ps1Path + "\"";
-        psi.WorkingDirectory = exeDir;
-        psi.UseShellExecute = false;
-        psi.CreateNoWindow = false;
+        // 双击 start.exe 时，在新 PowerShell 窗口中启动 start.ps1，
+        // 让用户获得独立的 TUI 窗口。命令行直接调用 start.ps1 则默认在当前窗口运行。
+        ProcessStartInfo psi = new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','{Escape(ps1Path)}'\"",
+            WorkingDirectory = exeDir,
+            UseShellExecute = false,
+            CreateNoWindow = false,
+        };
 
         try
         {
@@ -33,5 +37,11 @@ class Program
             Console.Error.WriteLine("启动失败: " + ex.Message);
             return 1;
         }
+    }
+
+    static string Escape(string path)
+    {
+        // 对 PowerShell 字符串中的单引号进行转义
+        return path.Replace("'", "''");
     }
 }
