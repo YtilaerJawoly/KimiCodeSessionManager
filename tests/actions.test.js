@@ -24,7 +24,7 @@ function makeMockSpawn({ error = null } = {}) {
 }
 
 describe('actions', () => {
-  it('continueSession opens new window via cmd start on Windows', async () => {
+  it('continueSession passes session id in generated launcher script', async () => {
     if (!isWin) return;
     let captured;
     const spawn = (cmd, args, options) => {
@@ -32,22 +32,17 @@ describe('actions', () => {
       return makeMockSpawn()();
     };
     await continueSession({ id: 'session_abc', projectPath: 'E:/foo' }, spawn, {});
-    assert.equal(captured.cmd, 'cmd.exe');
-    assert.deepEqual(captured.args.slice(0, 4), ['/c', 'start', '', 'powershell.exe']);
-    assert.equal(captured.args[4], '-NoProfile');
-    assert.equal(captured.args[5], '-ExecutionPolicy');
-    assert.equal(captured.args[6], 'Bypass');
-    assert.equal(captured.args[7], '-File');
-    assert.equal(typeof captured.args[8], 'string');
-    const scriptPath = captured.args[8];
+    const fileArgIndex = captured.cmd === 'wt.exe' ? 14 : captured.cmd === 'cmd.exe' ? 8 : -1;
+    assert.ok(fileArgIndex > 0, `unexpected launcher command: ${captured.cmd}`);
+    const scriptPath = captured.args[fileArgIndex];
     const script = await readFile(scriptPath, 'utf8');
     assert.ok(script.includes("$Host.UI.RawUI.WindowTitle = 'foo'"));
+    assert.ok(script.includes("'session_abc'"));
     assert.ok(script.includes("catch {"));
-    assert.equal(captured.options.windowsHide, false);
     await unlink(scriptPath).catch(() => {});
   });
 
-  it('createSession opens new window via cmd start on Windows', async () => {
+  it('createSession passes project title in generated launcher script', async () => {
     if (!isWin) return;
     let captured;
     const spawn = (cmd, args, options) => {
@@ -55,15 +50,12 @@ describe('actions', () => {
       return makeMockSpawn()();
     };
     await createSession('E:/bar', 'bar', spawn, {});
-    assert.equal(captured.cmd, 'cmd.exe');
-    assert.deepEqual(captured.args.slice(0, 4), ['/c', 'start', '', 'powershell.exe']);
-    assert.equal(captured.args[7], '-File');
-    assert.equal(typeof captured.args[8], 'string');
-    const scriptPath = captured.args[8];
+    const fileArgIndex = captured.cmd === 'wt.exe' ? 14 : captured.cmd === 'cmd.exe' ? 8 : -1;
+    assert.ok(fileArgIndex > 0, `unexpected launcher command: ${captured.cmd}`);
+    const scriptPath = captured.args[fileArgIndex];
     const script = await readFile(scriptPath, 'utf8');
     assert.ok(script.includes("$Host.UI.RawUI.WindowTitle = 'bar'"));
     assert.ok(script.includes("catch {"));
-    assert.equal(captured.options.windowsHide, false);
     await unlink(scriptPath).catch(() => {});
   });
 

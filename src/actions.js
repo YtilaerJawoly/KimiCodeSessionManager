@@ -40,8 +40,20 @@ function findKimiExecutable(env = process.env) {
   return 'kimi';
 }
 
+function findWindowsTerminal() {
+  if (platform() !== 'win32') return null;
+  const candidates = [
+    join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WindowsApps', 'wt.exe'),
+    join(process.env.ProgramFiles || '', 'WindowsApps', 'Microsoft.WindowsTerminal_8wekyb3d8bbwe', 'wt.exe'),
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return null;
+}
+
 function useWindowsTerminal(env = process.env) {
-  return platform() === 'win32' && !!env.WT_SESSION;
+  return platform() === 'win32' && (!!env.WT_SESSION || !!findWindowsTerminal());
 }
 
 function getProjectName(projectPath, explicitName) {
