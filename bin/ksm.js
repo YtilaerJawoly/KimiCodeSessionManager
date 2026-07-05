@@ -16,6 +16,12 @@ program
     } catch (err) {
       console.error(err?.message ?? err);
       if (err?.stack) console.error(err.stack);
+      if (process.platform === 'win32' && process.stdin.isTTY) {
+        console.error('\n按 Enter 键退出...');
+        process.stdin.setRawMode(false);
+        process.stdin.resume();
+        await new Promise(resolve => process.stdin.once('data', resolve));
+      }
       process.exit(1);
     }
   });

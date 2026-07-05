@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { platform, homedir } from 'node:os';
 import { resolve as pathResolve, join, delimiter } from 'node:path';
 import { writeFile, unlink, existsSync } from 'node:fs';
@@ -42,6 +42,19 @@ function findKimiExecutable(env = process.env) {
 
 function findWindowsTerminal() {
   if (platform() !== 'win32') return null;
+
+  // WindowsApps appx execution aliases are reparse points; existsSync may return false.
+  // Use where.exe to reliably detect wt.exe on PATH.
+  try {
+    const result = spawnSync('where.exe', ['wt.exe'], { encoding: 'utf8', shell: false, windowsHide: true });
+    if (result.status === 0 && result.stdout) {
+      const first = result.stdout.trim().split(/\r?\n/)[0];
+      if (first) return first;
+    }
+  } catch {
+    // fall through
+  }
+
   const candidates = [
     join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WindowsApps', 'wt.exe'),
     join(process.env.ProgramFiles || '', 'WindowsApps', 'Microsoft.WindowsTerminal_8wekyb3d8bbwe', 'wt.exe'),
