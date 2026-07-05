@@ -24,47 +24,53 @@ function makeMockSpawn({ error = null } = {}) {
 }
 
 describe('actions', () => {
-  it('continueSession passes -S, id and cwd to spawn', async () => {
+  it('continueSession opens new window via cmd start on Windows', async () => {
+    if (!isWin) return;
     let captured;
     const spawn = (cmd, args, options) => {
       captured = { cmd, args, options };
       return makeMockSpawn()();
     };
     await continueSession({ id: 'session_abc', projectPath: 'E:/foo' }, spawn, {});
-    assert.equal(captured.args.includes('-S'), true);
-    assert.equal(captured.args.includes('session_abc'), true);
-    assert.equal(captured.options.cwd, resolve('E:/foo'));
-    assert.equal(captured.options.detached, true);
+    assert.equal(captured.cmd, 'cmd.exe');
+    assert.deepEqual(captured.args.slice(0, 4), ['/c', 'start', '', 'powershell.exe']);
+    assert.equal(captured.args[4], '-NoProfile');
+    assert.equal(captured.args[5], '-ExecutionPolicy');
+    assert.equal(captured.args[6], 'Bypass');
+    assert.equal(captured.args[7], '-File');
+    assert.equal(typeof captured.args[8], 'string');
+    const scriptPath = captured.args[8];
+    const script = await readFile(scriptPath, 'utf8');
+    assert.ok(script.includes("$Host.UI.RawUI.WindowTitle = 'foo'"));
+    assert.ok(script.includes("catch {"));
+    assert.equal(captured.options.windowsHide, false);
+    await unlink(scriptPath).catch(() => {});
   });
 
-  it('createSession passes correct args and cwd', async () => {
+  it('createSession opens new window via cmd start on Windows', async () => {
+    if (!isWin) return;
     let captured;
     const spawn = (cmd, args, options) => {
       captured = { cmd, args, options };
       return makeMockSpawn()();
     };
     await createSession('E:/bar', 'bar', spawn, {});
-    assert.deepEqual(captured.args, []);
-    assert.equal(captured.options.cwd, resolve('E:/bar'));
-    assert.equal(captured.options.detached, true);
+    assert.equal(captured.cmd, 'cmd.exe');
+    assert.deepEqual(captured.args.slice(0, 4), ['/c', 'start', '', 'powershell.exe']);
+    assert.equal(captured.args[7], '-File');
+    assert.equal(typeof captured.args[8], 'string');
+    const scriptPath = captured.args[8];
+    const script = await readFile(scriptPath, 'utf8');
+    assert.ok(script.includes("$Host.UI.RawUI.WindowTitle = 'bar'"));
+    assert.ok(script.includes("catch {"));
+    assert.equal(captured.options.windowsHide, false);
+    await unlink(scriptPath).catch(() => {});
   });
 
   it('resolves immediately on spawn', async () => {
     const spawn = makeMockSpawn();
     const child = await openKimi(['-S', 'session_abc'], 'E:/foo', 'foo', spawn, {});
     assert.ok(child);
-  });
-
-  it('uses absolute kimi path when executable exists', async () => {
-    let captured;
-    const spawn = (cmd, args, options) => {
-      captured = { cmd, args, options };
-      return makeMockSpawn()();
-    };
-    await openKimi(['-S', 'session_abc'], 'E:/foo', 'foo', spawn, {});
-    assert.ok(captured.cmd.toLowerCase().endsWith('kimi') || captured.cmd.toLowerCase().endsWith('kimi.exe'));
-    assert.equal(captured.args.includes('-S'), true);
-    assert.equal(captured.args.includes('session_abc'), true);
   });
 
   it('uses Windows Terminal when WT_SESSION is set', async () => {

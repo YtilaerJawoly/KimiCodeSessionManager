@@ -7,7 +7,6 @@ import { promisify } from 'node:util';
 
 const writeFileAsync = promisify(writeFile);
 const unlinkAsync = promisify(unlink);
-const existsAsync = (p) => Promise.resolve(existsSync(p));
 
 export function continueSession(session, spawner, env = process.env) {
   return openKimi(['-S', session.id], session.projectPath, session.projectName, spawner, env);
@@ -61,15 +60,23 @@ export async function openKimi(args, cwd, projectName, spawner = spawn, env = pr
   let scriptPath;
 
   if (inWt) {
+    // 在 Windows Terminal 当前窗口的新标签页中打开
     scriptPath = await createTempPowerShellScript(cwdResolved, title, args, kimiPath);
     cmd = 'wt.exe';
     cmdArgs = ['-w', '0', 'nt', '-p', 'PowerShell', '-d', cwdResolved, '--title', title, 'powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath];
     options = { detached: true, stdio: 'ignore' };
+  } else if (platform() === 'win32') {
+    // 在普通 Windows 控制台中，使用 cmd.exe /c start 打开新的独立 PowerShell 窗口运行 Kimi
+    // 避免子进程继承 ksm 的控制台句柄导致 TUI 检测不到终端而闪退
+    scriptPath = await createTempPowerShellScript(cwdResolved, title, args, kimiPath);
+    cmd = 'cmd.exe';
+    cmdArgs = ['/c', 'start', '', 'powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath];
+    options = { cwd: cwdResolved, detached: true, stdio: 'ignore', windowsHide: false };
   } else {
-    const isWin = platform() === 'win32';
+    // 类 Unix 系统直接在后台启动
     cmd = kimiPath;
     cmdArgs = args;
-    options = { cwd: cwdResolved, detached: true, stdio: 'ignore', windowsHide: isWin };
+    options = { cwd: cwdResolved, detached: true, stdio: 'ignore' };
   }
 
   return new Promise((resolve, reject) => {
