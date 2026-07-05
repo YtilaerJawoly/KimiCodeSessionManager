@@ -1,14 +1,34 @@
 import { spawn } from 'node:child_process';
 import { platform } from 'node:os';
 import { readFileSync, existsSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
+import { getKimiHome } from './config.js';
+import { readKimiLatestVersion } from './kimi-version.js';
 
-export function getKimiHome(env = process.env) {
-  const raw = env.KIMI_HOME?.trim();
-  return raw ? resolve(raw) : resolve(homedir(), '.kimi-code');
-}
+/**
+ * 更新器模块
+ *
+ * 职责：
+ *   1. 安装 / 更新 Kimi Code（Windows 弹出新 PowerShell 窗口；非 Windows 在当前终端执行安装命令）。
+ *   2. 更新 ksm（git pull）。
+ *   3. 检查 Kimi Code 与 ksm 是否有新版本。
+ *
+ * 设计原则：
+ *   - Kimi home 解析复用 config.js 的 getKimiHome，避免重复。
+ *   - latest.json 解析复用 kimi-version.js 的 readKimiLatestVersion，避免重复。
+ *   - 子进程标准输出 / 错误收集统一到一个内部辅助函数，减少重复代码。
+ */
 
+/**
+ * 更新 / 安装 Kimi Code。
+ *
+ * Windows：在独立 PowerShell 窗口中执行官方安装脚本，并立即返回成功，
+ * 因为实际安装过程在新的交互窗口中完成。
+ *
+ * 非 Windows：在当前终端执行安装命令并等待结束，返回执行结果。
+ *
+ * @param {Function} [spawner=spawn] 用于测试注入的子进程启动函数
+ */
 export async function updateKimiCode(spawner = spawn) {
   const isWin = platform() === 'win32';
   if (!isWin) {
@@ -28,11 +48,7 @@ export async function updateKimiCode(spawner = spawn) {
 
     const child = spawner(
       'powershell.exe',
-      [
-        '-NoExit',
-        '-Command',
-        command,
-      ],
+      ['-NoExit', '-Command', command],
       { detached: true }
     );
 
@@ -46,38 +62,43 @@ export async function updateKimiCode(spawner = spawn) {
   });
 }
 
+/**
+ * 在指定目录执行 git pull 更新 ksm。
+ */
 export async function updateKsm(cwd, spawner = spawn) {
   return runCommand('git', ['pull'], cwd, spawner);
 }
 
+/**
+ * 执行一条 PowerShell 命令并等待其结束。
+ */
 function runPowerShellCommand(command, spawner) {
-  return new Promise((resolve) => {
-    const isWin = platform() === 'win32';
-    const child = spawner(
-      isWin ? 'powershell.exe' : 'pwsh',
-      ['-Command', command],
-      { stdio: 'pipe' }
-    );
-    let stdout = '';
-    let stderr = '';
-    child.stdout?.on('data', (data) => { stdout += data; });
-    child.stderr?.on('data', (data) => { stderr += data; });
-    child.on('error', (err) => resolve({ success: false, message: err.message }));
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolve({ success: true, message: stdout.trim() || 'OK' });
-      } else {
-        resolve({ success: false, message: (stderr || stdout).trim() || `exit code ${code}` });
-      }
-    });
-  });
+  const isWin = platform() === 'win32';
+  return runWithStdio(
+    isWin ? 'powershell.exe' : 'pwsh',
+    ['-Command', command],
+    { stdio: 'pipe' },
+    spawner
+  );
 }
 
+/**
+ * 执行任意命令并等待其结束，收集 stdout / stderr。
+ */
 function runCommand(cmd, args, cwd, spawner) {
+  return runWithStdio(cmd, args, { cwd, stdio: 'pipe' }, spawner);
+}
+
+/**
+ * 通用子进程执行辅助函数。
+ * 统一处理 error / close 事件，按退出码返回成功或失败结果。
+ */
+function runWithStdio(cmd, args, options, spawner) {
   return new Promise((resolve) => {
-    const child = spawner(cmd, args, { cwd, stdio: 'pipe' });
+    const child = spawner(cmd, args, options);
     let stdout = '';
     let stderr = '';
+
     child.stdout?.on('data', (data) => { stdout += data; });
     child.stderr?.on('data', (data) => { stderr += data; });
     child.on('error', (err) => resolve({ success: false, message: err.message }));
@@ -91,17 +112,20 @@ function runCommand(cmd, args, cwd, spawner) {
   });
 }
 
+/**
+ * 检查本地 Kimi Code 是否已安装，以及是否有新版本可用。
+ */
 export async function checkKimiCodeVersion(env = process.env) {
   const home = getKimiHome(env);
   const exe = join(home, 'bin', 'kimi.exe');
   const installed = existsSync(exe);
 
   if (!installed) {
-    return { installed: false, current: '', latest: readLatestJson(home), hasUpdate: false };
+    return { installed: false, current: '', latest: readKimiLatestVersion(home), hasUpdate: false };
   }
 
   const current = await getKimiExecutableVersion(exe);
-  const latest = readLatestJson(home);
+  const latest = readKimiLatestVersion(home);
 
   return {
     installed: true,
@@ -111,16 +135,9 @@ export async function checkKimiCodeVersion(env = process.env) {
   };
 }
 
-function readLatestJson(home) {
-  try {
-    const text = readFileSync(join(home, 'updates', 'latest.json'), 'utf8');
-    const data = JSON.parse(text);
-    return data.latest || data.version || data.manifest?.version || '';
-  } catch {
-    return '';
-  }
-}
-
+/**
+ * 调用 kimi --version 解析当前可执行文件版本号。
+ */
 function getKimiExecutableVersion(exe) {
   return new Promise((resolve) => {
     const child = spawn(exe, ['--version'], { shell: false });
@@ -141,6 +158,9 @@ function getKimiExecutableVersion(exe) {
   });
 }
 
+/**
+ * 检查 ksm 当前版本与远程最新 commit 是否一致。
+ */
 export async function checkKsmVersion(cwd, spawner = spawn) {
   const current = readCurrentKsmVersion();
   const latest = await getRemoteKsmVersion(cwd, spawner);
@@ -152,6 +172,9 @@ export async function checkKsmVersion(cwd, spawner = spawn) {
   };
 }
 
+/**
+ * 从 package.json 读取当前 ksm 版本。
+ */
 function readCurrentKsmVersion() {
   try {
     const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
@@ -161,6 +184,10 @@ function readCurrentKsmVersion() {
   }
 }
 
+/**
+ * 通过 git ls-remote 获取远程 HEAD 的短 SHA。
+ * 如果 3 秒内未完成，则自动放弃，避免阻塞菜单。
+ */
 async function getRemoteKsmVersion(cwd, spawner) {
   return new Promise((resolve) => {
     const child = spawner('git', ['ls-remote', 'origin', 'HEAD'], { cwd, stdio: 'pipe' });

@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { join } from 'node:path';
 import chalk from 'chalk';
 import { t } from '../i18n.js';
 import { getKimiHome } from '../config.js';
+import { readKimiLatestVersion } from '../kimi-version.js';
 import {
   WELCOME_WIDTH,
   LOGO_PREFIX,
@@ -30,14 +31,7 @@ const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.ur
  * 优先从 KIMI_HOME/updates/latest.json 中解析，读取失败返回空字符串。
  */
 export function getKimiVersion(env = process.env) {
-  const home = getKimiHome(env);
-  try {
-    const text = readFileSync(join(home, 'updates', 'latest.json'), 'utf8');
-    const data = JSON.parse(text);
-    return data.latest || data.version || data.manifest?.version || '';
-  } catch {
-    return '';
-  }
+  return readKimiLatestVersion(getKimiHome(env));
 }
 
 /**
