@@ -5,7 +5,7 @@
  * 职责：
  *   1. 解析命令行参数（commander）。
  *   2. 注册全局异常处理器。
- *   3. 启动 TUI（src/tui.js 的 startTui）。
+ *   3. 启动 TUI（src/tui/index.js 的 startTui）。
  *
  * 注意：
  *   - 本文件保持最小化，不处理业务逻辑、不处理国际化、不处理错误展示。
@@ -14,7 +14,7 @@
 
 import { readFileSync } from 'node:fs';
 import { program } from 'commander';
-import { startTui } from '../src/tui.js';
+import { startTui } from '../src/tui/index.js';
 import { registerGlobalHandlers, handleFatalError } from '../src/error-handler.js';
 
 // 从 package.json 读取元数据，避免硬编码版本与描述。

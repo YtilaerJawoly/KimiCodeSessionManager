@@ -1,257 +1,46 @@
-import { readFileSync, existsSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { select, search } from '@inquirer/prompts';
-import chalk from 'chalk';
+import { search, select } from '@inquirer/prompts';
 import Fuse from 'fuse.js';
-import { loadSessions } from './loader.js';
-import { buildProjects, getLatestSession, findProjectByPath } from './store.js';
-import { continueSession, createSession } from './actions.js';
-import { deleteSession, archiveSession } from './cleanup.js';
-import { updateKimiCode, updateKsm, checkKimiCodeVersion, checkKsmVersion } from './updater.js';
-import { createDesktopShortcut } from './shortcut.js';
-import { acquireInstanceLock, releaseInstanceLock, loadKsmConfig, saveKsmConfig } from './config.js';
-import { setLocale, t, getLocale } from './i18n.js';
+import chalk from 'chalk';
+import { join } from 'node:path';
+import { loadSessions } from '../loader.js';
+import { buildProjects, getLatestSession, findProjectByPath } from '../store.js';
+import { continueSession, createSession } from '../actions.js';
+import { deleteSession, archiveSession } from '../cleanup.js';
+import { updateKimiCode, updateKsm } from '../updater.js';
+import { createDesktopShortcut } from '../shortcut.js';
+import { t, getLocale, setLocale } from '../i18n.js';
+import { saveKsmConfig } from '../config.js';
+import { getKimiVersion, printWelcome } from './welcome.js';
+import {
+  clearLastLine,
+  padEnd,
+  truncate,
+  formatTime,
+  NAME_WIDTH,
+  PATH_WIDTH,
+  FUSE_OPTIONS,
+  QUIET_SELECT_THEME,
+  QUIET_SEARCH_THEME,
+  ROOT_DIR,
+} from './helpers.js';
 
-const QUIET_SELECT_THEME = {
-  prefix: '',
-  style: {
-    message: () => '',
-    answer: () => '',
-  },
-};
+/**
+ * 子菜单集合模块
+ *
+ * 职责：
+ *   1. 更新、语言、快捷设置、最近会话、项目、历史、清理、历史消息等菜单。
+ *   2. 负责调用 actions / cleanup / updater 执行业务动作，并在 TUI 中反馈结果。
+ *
+ * 设计原则：
+ *   - 每个菜单函数只处理一个独立页面，避免 index.js 膨胀。
+ *   - 菜单间通过函数调用跳转，返回上级即函数返回。
+ *   - 默认选中项统一放在“返回上一级”之后的第一项，提升键盘操作体验。
+ */
 
-function clearLastLine() {
-  process.stdout.write('\x1B[1A\x1B[K');
-}
-
-const QUIET_SEARCH_THEME = {
-  prefix: '',
-  style: {
-    message: () => '',
-    answer: () => '',
-  },
-};
-const NAME_WIDTH = 22;
-const PATH_WIDTH = 42;
-const FUSE_OPTIONS = { keys: ['name', 'path'], threshold: 0.4 };
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIR = resolve(__dirname, '..');
-const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
-
-function printWelcome(kimiVersion, messages = []) {
-  process.stdout.write('\x1B[2J\x1B[H');
-  const title = t('welcome.title', { version: pkg.version });
-  const width = 80;
-  const leftPad = '  ';
-  const logoPrefix = '▐█▛█▛█▌  ';
-  const linePrefix = '▐█████▌  ';
-  const line = (prefix, text) => {
-    const visibleText = leftPad + prefix + text;
-    const pad = width - stringWidth(visibleText);
-    return '│' + visibleText + ' '.repeat(Math.max(0, pad)) + '│';
-  };
-  const border = '╭' + '─'.repeat(width) + '╮';
-  const bottom = '╰' + '─'.repeat(width) + '╯';
-  console.log(chalk.hex('#4A90E2')(border));
-  console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
-  console.log(chalk.hex('#4A90E2')(line(logoPrefix, title)));
-  console.log(chalk.hex('#4A90E2')(line(linePrefix, t('welcome.subtitle', { version: kimiVersion || 'unknown' }))));
-  console.log(chalk.hex('#4A90E2')('│' + ' '.repeat(width) + '│'));
-  console.log(chalk.hex('#4A90E2')(bottom));
-
-  for (const msg of messages.slice(0, 5)) {
-    const color = msg.level === 'error' ? chalk.red : msg.level === 'warning' ? chalk.yellow : chalk.cyan;
-    console.log(color(msg.text));
-  }
-  console.log();
-}
-
-function getKimiHome(env = process.env) {
-  const raw = env.KIMI_HOME?.trim();
-  return raw ? resolve(raw) : resolve(homedir(), '.kimi-code');
-}
-
-function getKimiVersion(env = process.env) {
-  const home = getKimiHome(env);
-  try {
-    const text = readFileSync(join(home, 'updates', 'latest.json'), 'utf8');
-    const data = JSON.parse(text);
-    return data.latest || data.version || data.manifest?.version || '';
-  } catch {
-    return '';
-  }
-}
-
-import { spawn } from 'node:child_process';
-
-function padEnd(str, width) {
-  const len = stringWidth(str);
-  if (len >= width) return str;
-  return str + ' '.repeat(width - len);
-}
-
-function stringWidth(str) {
-  let width = 0;
-  for (const char of String(str)) {
-    const code = char.codePointAt(0);
-    width += (code >= 0x4e00 && code <= 0x9fff) ? 2 : 1;
-  }
-  return width;
-}
-
-export async function startTui(options = {}) {
-  let env;
-  let lockAcquired = false;
-  try {
-    env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
-
-    const lock = acquireInstanceLock(env);
-    if (!lock.acquired) {
-      const message = lock.pid
-        ? t('error.alreadyRunning', { pid: lock.pid })
-        : t('error.lockFailed', { message: lock.error || '' });
-      console.error(chalk.red(message));
-      process.exitCode = 1;
-      return;
-    }
-    lockAcquired = true;
-
-    const config = loadKsmConfig(env);
-    if (config.locale) setLocale(config.locale);
-
-    const kimiVersion = getKimiVersion(env);
-    printWelcome(kimiVersion);
-
-    const versionPromise = Promise.all([
-      checkKimiCodeVersion(env),
-      checkKsmVersion(ROOT_DIR),
-    ]);
-
-    const initialCodeStatus = await checkKimiCodeVersion(env);
-    if (!initialCodeStatus.installed) {
-      const shouldInstall = await select({
-        message: t('install.title'),
-        theme: QUIET_SELECT_THEME,
-        choices: [
-          { name: t('install.yes'), value: true },
-          { name: t('install.no'), value: false },
-        ],
-      });
-      clearLastLine();
-      if (shouldInstall) {
-        const result = await updateKimiCode();
-        if (result.success) {
-          console.log(chalk.green(t('install.success')));
-        } else {
-          console.error(chalk.red(t('install.failed', { message: result.message })));
-          console.log(chalk.yellow(t('install.manual')));
-        }
-      }
-    }
-
-    await mainMenu(env, { versionPromise, initialCodeStatus });
-  } catch (err) {
-    if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
-      return;
-    }
-    console.error(chalk.red(t('error.prefix', { message: err?.message || err })));
-    process.exit(1);
-  } finally {
-    if (lockAcquired && env) {
-      releaseInstanceLock(env);
-    }
-  }
-}
-
-async function mainMenu(env, options = {}) {
-  const { versionPromise, initialCodeStatus = {} } = options;
-  let messages = [];
-  let checked = false;
-  let pendingPromise = versionPromise || null;
-
-  function buildMessages(kimiCodeStatus, ksmStatus) {
-    const list = [];
-    if (!kimiCodeStatus.installed) {
-      list.push({ level: 'warning', text: t('install.title') });
-    } else if (kimiCodeStatus.hasUpdate) {
-      list.push({ level: 'warning', text: t('mainMenu.kimiCodeUpdate', { version: kimiCodeStatus.latest }) });
-    }
-    if (ksmStatus.hasUpdate) {
-      list.push({ level: 'warning', text: t('mainMenu.ksmUpdate', { version: ksmStatus.latest }) });
-    }
-    return list;
-  }
-
-  if (!pendingPromise) {
-    messages = buildMessages(initialCodeStatus, {});
-  }
-
-  while (true) {
-    const kimiVersion = getKimiVersion(env);
-    printWelcome(kimiVersion, messages);
-
-    const prompt = select({
-      message: t('mainMenu.title'),
-      theme: QUIET_SELECT_THEME,
-      choices: [
-        { name: t('mainMenu.recent'), value: 'recent' },
-        { name: t('mainMenu.update'), value: 'update' },
-        { name: t('mainMenu.language'), value: 'language' },
-        { name: t('mainMenu.messages'), value: 'messages' },
-        { name: t('mainMenu.settings'), value: 'settings' },
-        { name: t('mainMenu.exit'), value: 'exit' },
-      ],
-    });
-
-    if (pendingPromise && !checked) {
-      checked = true;
-      pendingPromise.then(([kimiCodeStatus, ksmStatus]) => {
-        messages = buildMessages(kimiCodeStatus, ksmStatus);
-        try { prompt.cancel(); } catch {}
-      }).catch(() => {
-        messages = [];
-      });
-      pendingPromise = null;
-    }
-
-    let action;
-    try {
-      action = await prompt;
-      clearLastLine();
-    } catch (err) {
-      if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
-        continue;
-      }
-      throw err;
-    }
-
-    switch (action) {
-      case 'recent':
-        await recentSessionsMenu(env);
-        break;
-      case 'update':
-        await updateMenu(env, messages);
-        break;
-      case 'language':
-        await languageMenu(env);
-        break;
-      case 'messages':
-        await messagesMenu(messages);
-        break;
-      case 'settings':
-        await shortcutSettingsMenu();
-        break;
-      case 'exit':
-      default:
-        return;
-    }
-  }
-}
-
-async function updateMenu(env, messages = []) {
+/**
+ * 更新菜单。
+ */
+export async function updateMenu(env, messages = []) {
   while (true) {
     const action = await select({
       message: t('updateMenu.title'),
@@ -274,6 +63,7 @@ async function updateMenu(env, messages = []) {
           console.error(chalk.red(t('updateMenu.ksmFailed', { message: result.message })));
           console.log(chalk.yellow(t('updateMenu.ksmManual')));
         }
+        // 刷新欢迎界面，保持消息区可见
         printWelcome(getKimiVersion(env), messages);
         break;
       }
@@ -295,7 +85,10 @@ async function updateMenu(env, messages = []) {
   }
 }
 
-async function languageMenu(env) {
+/**
+ * 语言切换菜单。
+ */
+export async function languageMenu(env) {
   const current = getLocale();
   const action = await select({
     message: t('languageMenu.title'),
@@ -314,7 +107,10 @@ async function languageMenu(env) {
   }
 }
 
-async function shortcutSettingsMenu() {
+/**
+ * 快捷设置菜单。
+ */
+export async function shortcutSettingsMenu() {
   while (true) {
     const action = await select({
       message: t('settingsMenu.title'),
@@ -344,7 +140,10 @@ async function shortcutSettingsMenu() {
   }
 }
 
-async function recentSessionsMenu(env) {
+/**
+ * 最近会话菜单：搜索并选择项目。
+ */
+export async function recentSessionsMenu(env) {
   const sessions = await loadSessions(env);
   const projects = buildProjects(sessions);
 
@@ -386,9 +185,11 @@ async function recentSessionsMenu(env) {
   }
 
   await projectMenu(project, env);
-  // 项目菜单返回后，回到主菜单
 }
 
+/**
+ * 项目菜单：对单个项目继续、新建、查看历史或清理会话。
+ */
 async function projectMenu(project, env) {
   while (true) {
     const sessions = await loadSessions(env);
@@ -439,7 +240,15 @@ async function projectMenu(project, env) {
   }
 }
 
-async function messagesMenu(messages) {
+/**
+ * 历史消息菜单。
+ */
+export async function messagesMenu(messages) {
+  if (messages.length === 0) {
+    console.log(chalk.yellow(t('messagesMenu.empty')));
+    return;
+  }
+
   const choices = [
     { name: t('messagesMenu.back'), value: 'back' },
     ...messages.map((msg, index) => ({
@@ -447,11 +256,6 @@ async function messagesMenu(messages) {
       value: index,
     })),
   ];
-
-  if (messages.length === 0) {
-    console.log(chalk.yellow(t('messagesMenu.empty')));
-    return;
-  }
 
   const selected = await select({
     message: t('messagesMenu.title'),
@@ -470,6 +274,9 @@ async function messagesMenu(messages) {
   }
 }
 
+/**
+ * 项目历史会话菜单。
+ */
 async function historyMenu(project) {
   const choices = [
     { name: t('historyMenu.back'), value: 'back' },
@@ -493,6 +300,9 @@ async function historyMenu(project) {
   if (session) await continueSession({ ...session, projectName: project.name });
 }
 
+/**
+ * 会话清理菜单：删除或归档选中的会话。
+ */
 async function cleanupMenu(project, env) {
   const { checkbox } = await import('@inquirer/prompts');
   const choices = [
@@ -542,16 +352,4 @@ async function cleanupMenu(project, env) {
   if (!newProject || newProject.sessions.length === 0) {
     console.log(chalk.yellow(t('cleanupMenu.noSessions')));
   }
-}
-
-function truncate(str, max) {
-  const safe = str || '';
-  if (safe.length <= max) return safe;
-  return safe.slice(0, max - 1) + '…';
-}
-
-function formatTime(iso) {
-  const d = new Date(iso);
-  const locale = getLocale() === 'zh-CN' ? 'zh-CN' : 'en-US';
-  return isNaN(d) ? iso : d.toLocaleString(locale);
 }
