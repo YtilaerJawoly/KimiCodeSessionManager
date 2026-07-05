@@ -1,7 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { platform, homedir } from 'node:os';
 import { resolve as pathResolve, join, delimiter } from 'node:path';
-import { writeFile, unlink, existsSync } from 'node:fs';
+import { writeFile, unlink, existsSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -144,6 +144,8 @@ try {
 `;
   const tmpDir = pathResolve(fileURLToPath(import.meta.url), '..', '..', 'tmp');
   const tmpFile = pathResolve(tmpDir, `ksm-launcher-${Date.now()}.ps1`);
+  // 保证临时目录存在，避免首次运行或目录被删除时写入失败
+  mkdirSync(tmpDir, { recursive: true });
   await writeFileAsync(tmpFile, script, 'utf8');
   return tmpFile;
 }
