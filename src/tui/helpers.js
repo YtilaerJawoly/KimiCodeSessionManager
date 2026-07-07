@@ -39,6 +39,14 @@ export const QUIET_SEARCH_THEME = {
   },
 };
 
+/** 多选框的静默主题：隐藏前缀和答案回显 */
+export const QUIET_CHECKBOX_THEME = {
+  prefix: '',
+  style: {
+    answer: () => '',
+  },
+};
+
 /** 最近会话列表中项目名称列宽 */
 export const NAME_WIDTH = 22;
 
@@ -63,6 +71,21 @@ export const LINE_PREFIX = '▐█████▌  ';
  */
 export function clearLastLine() {
   process.stdout.write('\x1B[1A\x1B[K');
+}
+
+/**
+ * 包装 inquirer 提示函数，捕获用户取消（ESC）并返回指定的取消值。
+ * 用于统一子菜单中按 ESC 的行为：返回上级而不是退出程序。
+ */
+export async function promptWithCancel(promptFn, cancelValue = 'back') {
+  try {
+    return await promptFn();
+  } catch (err) {
+    if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
+      return cancelValue;
+    }
+    throw err;
+  }
 }
 
 /**

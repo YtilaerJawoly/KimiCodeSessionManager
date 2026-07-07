@@ -64,6 +64,8 @@ const locales = {
     'projectMenu.history': '查看该项目的历史会话',
     'projectMenu.new': '为此项目新建会话',
     'projectMenu.cleanup': '清理/归档旧会话',
+    'projectMenu.continueStarted': '已继续会话: {title}',
+    'projectMenu.newStarted': '已新建 {name} 的会话',
 
     'historyMenu.title': '选择要继续的历史会话：',
     'historyMenu.back': '返回上一级',
@@ -150,6 +152,8 @@ const locales = {
     'projectMenu.history': 'View project history',
     'projectMenu.new': 'Create new session for this project',
     'projectMenu.cleanup': 'Cleanup / archive old sessions',
+    'projectMenu.continueStarted': 'Continuing session: {title}',
+    'projectMenu.newStarted': 'New session started for {name}',
 
     'historyMenu.title': 'Select a historical session to continue:',
     'historyMenu.back': 'Back',

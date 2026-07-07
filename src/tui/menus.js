@@ -21,6 +21,8 @@ import {
   FUSE_OPTIONS,
   QUIET_SELECT_THEME,
   QUIET_SEARCH_THEME,
+  QUIET_CHECKBOX_THEME,
+  promptWithCancel,
   ROOT_DIR,
 } from './helpers.js';
 
@@ -42,7 +44,7 @@ import {
  */
 export async function updateMenu(env, messages = []) {
   while (true) {
-    const action = await select({
+    const action = await promptWithCancel(() => select({
       message: t('updateMenu.title'),
       theme: QUIET_SELECT_THEME,
       default: 'ksm',
@@ -51,7 +53,7 @@ export async function updateMenu(env, messages = []) {
         { name: t('updateMenu.ksm'), value: 'ksm' },
         { name: t('updateMenu.kimiCode'), value: 'kimiCode' },
       ],
-    });
+    }));
     clearLastLine();
 
     switch (action) {
@@ -92,9 +94,9 @@ export async function updateMenu(env, messages = []) {
 /**
  * 语言切换菜单。
  */
-export async function languageMenu(env) {
+export async function languageMenu(env, messages = []) {
   const current = getLocale();
-  const action = await select({
+  const action = await promptWithCancel(() => select({
     message: t('languageMenu.title'),
     theme: QUIET_SELECT_THEME,
     default: current,
@@ -103,20 +105,21 @@ export async function languageMenu(env) {
       { name: t('languageMenu.zhCN'), value: 'zh-CN' },
       { name: t('languageMenu.en'), value: 'en' },
     ],
-  });
+  }));
   clearLastLine();
   if (action && action !== 'back' && action !== current) {
     setLocale(action);
     saveKsmConfig({ locale: action }, env);
+    printWelcome(await getKimiVersion(env), messages);
   }
 }
 
 /**
  * 快捷设置菜单。
  */
-export async function shortcutSettingsMenu() {
+export async function shortcutSettingsMenu(env, messages = []) {
   while (true) {
-    const action = await select({
+    const action = await promptWithCancel(() => select({
       message: t('settingsMenu.title'),
       theme: QUIET_SELECT_THEME,
       default: 'desktop',
@@ -124,7 +127,7 @@ export async function shortcutSettingsMenu() {
         { name: t('settingsMenu.back'), value: 'back' },
         { name: t('settingsMenu.desktop'), value: 'desktop' },
       ],
-    });
+    }));
     clearLastLine();
 
     switch (action) {
@@ -135,6 +138,8 @@ export async function shortcutSettingsMenu() {
         } else {
           console.error(chalk.red(t('settingsMenu.desktopFailed', { message: result.message })));
         }
+        // 刷新欢迎界面，保持消息区可见
+        printWelcome(await getKimiVersion(env), messages);
         break;
       }
       case 'back':
@@ -158,7 +163,7 @@ export async function recentSessionsMenu(env) {
 
   const fuse = new Fuse(projects, FUSE_OPTIONS);
 
-  const selectedPath = await search({
+  const selectedPath = await promptWithCancel(() => search({
     message: t('recentMenu.title'),
     theme: QUIET_SEARCH_THEME,
     source: (input = '') => {
@@ -178,7 +183,7 @@ export async function recentSessionsMenu(env) {
         { name: t('recentMenu.back'), value: 'back' },
       ];
     },
-  });
+  }));
 
   if (selectedPath === 'back') return;
 
@@ -209,23 +214,27 @@ async function projectMenu(project, env) {
       { name: t('projectMenu.cleanup'), value: 'cleanup', disabled: currentProject.sessions.length === 0 },
     ];
 
-    const action = await select({
+    const action = await promptWithCancel(() => select({
       message: t('projectMenu.title', { name: currentProject.name }),
       theme: QUIET_SELECT_THEME,
       default: 'continue-latest',
       choices,
-    });
+    }));
     clearLastLine();
 
     switch (action) {
       case 'continue-latest':
-        if (latest) await continueSession(latest);
+        if (latest) {
+          await continueSession(latest);
+          console.log(chalk.green(t('projectMenu.continueStarted', { title: truncate(latest.title, 40) })));
+        }
         break;
       case 'history':
         if (currentProject.sessions.length > 0) await historyMenu(currentProject);
         break;
       case 'new':
         await createSession(currentProject.path, currentProject.name);
+        console.log(chalk.green(t('projectMenu.newStarted', { name: currentProject.name })));
         break;
       case 'cleanup':
         if (currentProject.sessions.length > 0) {
@@ -261,12 +270,12 @@ export async function messagesMenu(messages) {
     })),
   ];
 
-  const selected = await select({
+  const selected = await promptWithCancel(() => select({
     message: t('messagesMenu.title'),
     theme: QUIET_SELECT_THEME,
     choices,
     pageSize: 15,
-  });
+  }));
   clearLastLine();
   if (selected === 'back') return;
 
@@ -291,13 +300,13 @@ async function historyMenu(project) {
     })),
   ];
 
-  const sid = await select({
+  const sid = await promptWithCancel(() => select({
     message: t('historyMenu.title'),
     theme: QUIET_SELECT_THEME,
     choices,
     pageSize: 15,
     default: project.sessions[0]?.id,
-  });
+  }));
   clearLastLine();
   if (sid === 'back') return;
   const session = project.sessions.find(s => s.id === sid);
@@ -318,10 +327,13 @@ async function cleanupMenu(project, env) {
     })),
   ];
 
-  const ids = await checkbox({ message: t('cleanupMenu.title'), choices, theme: { prefix: '' } });
+  const ids = await promptWithCancel(
+    () => checkbox({ message: t('cleanupMenu.title'), choices, theme: QUIET_CHECKBOX_THEME }),
+    ['back']
+  );
   if (ids.length === 0 || ids.includes('back')) return;
 
-  const mode = await select({
+  const mode = await promptWithCancel(() => select({
     message: t('cleanupMenu.modeTitle'),
     theme: QUIET_SELECT_THEME,
     default: 'delete',
@@ -330,7 +342,7 @@ async function cleanupMenu(project, env) {
       { name: t('cleanupMenu.archive'), value: 'archive' },
       { name: t('cleanupMenu.cancel'), value: 'cancel' },
     ],
-  });
+  }));
   clearLastLine();
 
   if (mode === 'cancel') return;

@@ -198,7 +198,7 @@ async function mainMenu(env, options = {}) {
         await messagesMenu(messages);
         break;
       case 'settings':
-        await shortcutSettingsMenu();
+        await shortcutSettingsMenu(env, messages);
         break;
       case 'exit':
       default:
