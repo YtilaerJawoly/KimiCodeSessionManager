@@ -2,6 +2,8 @@
 
 A Node.js CLI/TUI tool for managing and quickly resuming Kimi Code sessions. It groups sessions by project, lets you resume the latest session, bulk clean up or archive old sessions, switch between Chinese and English, and update Kimi Code / ksm itself.
 
+Repository: https://github.com/YtilaerJawoly/KimiCodeSessionManager
+
 ---
 
 ## Features
@@ -20,16 +22,19 @@ A Node.js CLI/TUI tool for managing and quickly resuming Kimi Code sessions. It 
 
 ## Installation
 
-### Global install
+### Install from GitHub (recommended)
 
 ```bash
+git clone https://github.com/YtilaerJawoly/KimiCodeSessionManager.git
+cd KimiCodeSessionManager
 npm install -g .
 ```
 
-For local development you can also use `npm link`:
+### Local development
 
 ```bash
 npm link
+ksm
 ```
 
 ### Quick start on Windows
@@ -61,9 +66,21 @@ After launch you enter the interactive TUI:
 5. **Quick settings**: Create a desktop shortcut.
 6. **Exit**: Close ksm.
 
----
+## Share with others
 
-## Directory structure
+1. Send the repository URL:
+   ```
+   https://github.com/YtilaerJawoly/KimiCodeSessionManager
+   ```
+2. The recipient runs:
+   ```bash
+   git clone https://github.com/YtilaerJawoly/KimiCodeSessionManager.git
+   cd KimiCodeSessionManager
+   npm install -g .
+   ksm
+   ```
+
+If the recipient is not comfortable with the command line, you can zip the project directory (including `node_modules`, `start.exe`, `start.ps1`, etc.) and send it. Windows users can then double-click `start.exe` after extracting.
 
 ```
 .

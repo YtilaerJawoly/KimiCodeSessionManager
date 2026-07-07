@@ -2,6 +2,8 @@
 
 一个用于管理和快速恢复 Kimi Code 会话的 Node.js CLI/TUI 工具。支持按项目聚合会话、一键继续最近会话、批量清理与归档、中英文界面切换，以及 Kimi Code / ksm 自身更新。
 
+仓库地址：https://github.com/YtilaerJawoly/KimiCodeSessionManager
+
 ---
 
 ## 功能特性
@@ -20,16 +22,19 @@
 
 ## 安装
 
-### 全局安装
+### 通过 GitHub 安装（推荐）
 
 ```bash
+git clone https://github.com/YtilaerJawoly/KimiCodeSessionManager.git
+cd KimiCodeSessionManager
 npm install -g .
 ```
 
-或本地开发时使用 `npm link`：
+### 本地开发
 
 ```bash
 npm link
+ksm
 ```
 
 ### Windows 快捷启动
@@ -61,9 +66,21 @@ ksm --home /path/to/.kimi-code
 5. **快捷设置**：创建桌面快捷方式。
 6. **退出**：关闭 ksm。
 
----
+## 分享给他人
 
-## 目录结构
+1. 把仓库地址发给对方：
+   ```
+   https://github.com/YtilaerJawoly/KimiCodeSessionManager
+   ```
+2. 对方执行：
+   ```bash
+   git clone https://github.com/YtilaerJawoly/KimiCodeSessionManager.git
+   cd KimiCodeSessionManager
+   npm install -g .
+   ksm
+   ```
+
+如果对方不会使用命令行，也可以把项目目录（包含 `node_modules`、`start.exe`、`start.ps1` 等文件）打包成 zip 发送，Windows 用户解压后双击 `start.exe` 即可。
 
 ```
 .
