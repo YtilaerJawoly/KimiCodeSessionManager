@@ -22,7 +22,7 @@ function makeMockSpawn({ code = 0, error = null, stdout = '', stderr = '' } = {}
 }
 
 describe('updater', () => {
-  it('updateKimiCode runs installer in current terminal on Windows', async () => {
+  it('updateKimiCode runs installer in current terminal', async () => {
     let captured;
     const spawn = (cmd, args, options) => {
       captured = { cmd, args, options };
