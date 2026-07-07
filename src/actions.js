@@ -4,6 +4,7 @@ import { resolve as pathResolve, join, delimiter } from 'node:path';
 import { writeFile, unlink, existsSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { spawnDetached } from './process.js';
 
 /**
  * 会话动作模块
@@ -149,24 +150,15 @@ export async function openKimi(args, cwd, projectName, spawner = spawn, env = pr
     options = { cwd: cwdResolved, detached: true, stdio: 'ignore' };
   }
 
-  return new Promise((resolve, reject) => {
-    const child = spawner(cmd, cmdArgs, options);
-    let settled = false;
-
-    child.on('error', (err) => {
-      if (settled) return;
-      settled = true;
-      cleanupTempScript(scriptPath).catch(() => {});
-      reject(new Error(`无法启动 Kimi Code (${cmd} ${cmdArgs.join(' ')}): ${err.message}`));
-    });
-
-    child.on('spawn', () => {
-      if (settled) return;
-      settled = true;
+  return spawnDetached(cmd, cmdArgs, options, spawner)
+    .then((child) => {
       child.unref();
-      resolve(child);
+      return child;
+    })
+    .catch(async (err) => {
+      await cleanupTempScript(scriptPath).catch(() => {});
+      throw new Error(`无法启动 Kimi Code (${cmd} ${cmdArgs.join(' ')}): ${err.message}`);
     });
-  });
 }
 
 /**
