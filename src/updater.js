@@ -4,6 +4,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { getKimiHome } from './config.js';
 import { readKimiLatestVersion } from './kimi-version.js';
+import { findLatestStable, isNewer, parseSemver } from './version.js';
 
 /**
  * 更新器模块
@@ -159,16 +160,18 @@ function getKimiExecutableVersion(exe) {
 }
 
 /**
- * 检查 ksm 当前版本与远程最新 commit 是否一致。
+ * 检查 ksm 当前版本与远程最新稳定版是否一致。
+ * 远程版本从 git tag 中解析，忽略 prerelease tag；网络失败时静默返回。
  */
 export async function checkKsmVersion(cwd, spawner = spawn) {
   const current = readCurrentKsmVersion();
-  const latest = await getRemoteKsmVersion(cwd, spawner);
+  const latestTag = await getRemoteKsmVersion(cwd, spawner);
+  const latest = latestTag ? latestTag.replace(/^v/, '') : '';
 
   return {
     current,
     latest,
-    hasUpdate: !!current && !!latest && current !== latest,
+    hasUpdate: !!current && !!latest && isNewer(latest, current),
   };
 }
 
@@ -185,12 +188,14 @@ function readCurrentKsmVersion() {
 }
 
 /**
- * 通过 git ls-remote 获取远程 HEAD 的短 SHA。
- * 如果 3 秒内未完成，则自动放弃，避免阻塞菜单。
+ * 通过 git ls-remote --tags origin 获取远程稳定版本 tag。
+ * 解析所有 `refs/tags/vX.Y.Z` 与 `refs/tags/vX.Y.Z^{}`，
+ * 过滤 prerelease，取最大稳定版本。
+ * 如果 3 秒内未完成，自动放弃，避免阻塞菜单。
  */
 async function getRemoteKsmVersion(cwd, spawner) {
   return new Promise((resolve) => {
-    const child = spawner('git', ['ls-remote', 'origin', 'HEAD'], { cwd, stdio: 'pipe' });
+    const child = spawner('git', ['ls-remote', '--tags', 'origin'], { cwd, stdio: 'pipe' });
     let stdout = '';
     let stderr = '';
     let settled = false;
@@ -218,9 +223,17 @@ async function getRemoteKsmVersion(cwd, spawner) {
         resolve('');
         return;
       }
-      const line = stdout.trim().split('\n')[0] || '';
-      const sha = line.split(/\s+/)[0] || '';
-      resolve(sha.slice(0, 7));
+      const tags = [];
+      for (const line of stdout.trim().split('\n')) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length < 2) continue;
+        const ref = parts[1];
+        // 只取真正的 tag ref，跳过指向 commit 的 dereferenced ref
+        const match = ref.match(/^refs\/tags\/(v\d+\.\d+\.\d+(?:-[a-zA-Z0-9.]+)?)$/);
+        if (match) tags.push(match[1]);
+      }
+      const latest = findLatestStable(tags);
+      resolve(latest || '');
     });
   });
 }
