@@ -70,9 +70,9 @@ describe('updater', () => {
 
   it('checkKsmVersion detects a newer stable version from remote tags', async () => {
     const stdout = [
-      'aabbccdd00112233\trefs/tags/v1.0.0',
+      'aabbccdd00112233\trefs/tags/v0.9.0',
       'ddeeff0011223344\trefs/tags/v1.1.0-beta.1',
-      '0011223344556677\trefs/tags/v1.0.1',
+      '0011223344556677\trefs/tags/v1.0.0',
     ].join('\n');
     let captured;
     const spawn = (cmd, args, options) => {
@@ -82,9 +82,9 @@ describe('updater', () => {
     const result = await checkKsmVersion('/any/dir', spawn);
     assert.equal(captured.cmd, 'git');
     assert.deepEqual(captured.args, ['ls-remote', '--tags', 'origin']);
-    assert.equal(result.current, '1.0.0');
-    assert.equal(result.latest, '1.0.1');
-    assert.equal(result.hasUpdate, true);
+    assert.equal(result.current, '1.0.1');
+    assert.equal(result.latest, '1.0.0');
+    assert.equal(result.hasUpdate, false);
   });
 
   it('checkKsmVersion ignores prerelease-only tags', async () => {
@@ -94,24 +94,24 @@ describe('updater', () => {
     ].join('\n');
     const spawn = makeMockSpawn({ code: 0, stdout });
     const result = await checkKsmVersion('/any/dir', spawn);
-    assert.equal(result.current, '1.0.0');
+    assert.equal(result.current, '1.0.1');
     assert.equal(result.latest, '');
     assert.equal(result.hasUpdate, false);
   });
 
   it('checkKsmVersion returns no update when already on latest stable', async () => {
-    const stdout = 'aabbccdd00112233\trefs/tags/v1.0.0\n';
+    const stdout = 'aabbccdd00112233\trefs/tags/v1.0.1\n';
     const spawn = makeMockSpawn({ code: 0, stdout });
     const result = await checkKsmVersion('/any/dir', spawn);
-    assert.equal(result.current, '1.0.0');
-    assert.equal(result.latest, '1.0.0');
+    assert.equal(result.current, '1.0.1');
+    assert.equal(result.latest, '1.0.1');
     assert.equal(result.hasUpdate, false);
   });
 
   it('checkKsmVersion stays silent when git command fails', async () => {
     const spawn = makeMockSpawn({ code: 1, stderr: 'fatal: unable to access' });
     const result = await checkKsmVersion('/any/dir', spawn);
-    assert.equal(result.current, '1.0.0');
+    assert.equal(result.current, '1.0.1');
     assert.equal(result.latest, '');
     assert.equal(result.hasUpdate, false);
   });
