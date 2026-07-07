@@ -23,10 +23,7 @@ import { findLatestStable, isNewer } from './version.js';
 /**
  * 更新 / 安装 Kimi Code。
  *
- * Windows：在独立 PowerShell 窗口中执行官方安装脚本，并立即返回成功，
- * 因为实际安装过程在新的交互窗口中完成。
- *
- * 非 Windows：在当前终端执行安装命令并等待结束，返回执行结果。
+ * 直接在 ksm 所在的终端窗口中执行安装脚本，并等待其完成。
  *
  * @param {Function} [spawner=spawn] 用于测试注入的子进程启动函数
  */
@@ -39,28 +36,10 @@ export async function updateKimiCode(spawner = spawn) {
     );
   }
 
-  return new Promise((resolve) => {
-    const command = [
-      'irm https://code.kimi.com/kimi-code/install.ps1 | iex;',
-      "Write-Host '';",
-      "Write-Host '安装完成，请关闭此窗口并重新打开一个终端使用 Kimi Code。' -ForegroundColor Green;",
-      "Read-Host '按 Enter 键退出'",
-    ].join(' ');
-
-    const child = spawner(
-      'powershell.exe',
-      ['-NoExit', '-Command', command],
-      { detached: true }
-    );
-
-    child.on('error', (err) => resolve({ success: false, message: err.message }));
-    child.on('spawn', () => {
-      resolve({
-        success: true,
-        message: '已在新窗口启动 Kimi Code 安装程序，完成后请重新打开终端。',
-      });
-    });
-  });
+  return runPowerShellCommand(
+    'irm https://code.kimi.com/kimi-code/install.ps1 | iex',
+    spawner
+  );
 }
 
 /**

@@ -64,18 +64,22 @@ export async function updateMenu(env, messages = []) {
           console.log(chalk.yellow(t('updateMenu.ksmManual')));
         }
         // 刷新欢迎界面，保持消息区可见
-        printWelcome(getKimiVersion(env), messages);
+        printWelcome(await getKimiVersion(env), messages);
         break;
       }
       case 'kimiCode': {
+        console.log(chalk.yellow(t('updateMenu.kimiCodeInstalling')));
         const result = await updateKimiCode();
+        clearLastLine();
         if (result.success) {
-          console.log(chalk.green(result.message));
-          console.log(chalk.yellow(t('updateMenu.kimiCodeWindowOpened')));
+          console.log(chalk.green(t('updateMenu.kimiCodeSuccess')));
+          console.log(chalk.yellow(t('updateMenu.kimiCodeRestart')));
         } else {
-          console.error(chalk.red(t('updateMenu.ksmFailed', { message: result.message })));
+          console.error(chalk.red(t('updateMenu.kimiCodeFailed', { message: result.message })));
           console.log(chalk.yellow(t('updateMenu.kimiCodeManual')));
         }
+        // 刷新欢迎界面，显示新的 Kimi Code 版本并保持消息区可见
+        printWelcome(await getKimiVersion(env), messages);
         break;
       }
       case 'back':

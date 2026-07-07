@@ -22,22 +22,19 @@ function makeMockSpawn({ code = 0, error = null, stdout = '', stderr = '' } = {}
 }
 
 describe('updater', () => {
-  it('updateKimiCode opens a new PowerShell window on Windows', async () => {
+  it('updateKimiCode runs installer in current terminal on Windows', async () => {
     let captured;
     const spawn = (cmd, args, options) => {
       captured = { cmd, args, options };
-      const child = new EventEmitter();
-      process.nextTick(() => child.emit('spawn'));
-      return child;
+      return makeMockSpawn({ code: 0, stdout: 'installed' })();
     };
     const result = await updateKimiCode(spawn);
     assert.equal(result.success, true);
-    assert.equal(result.message, '已在新窗口启动 Kimi Code 安装程序，完成后请重新打开终端。');
+    assert.equal(result.message, 'installed');
     assert.equal(captured.cmd, 'powershell.exe');
-    assert.equal(captured.args[0], '-NoExit');
-    assert.equal(captured.args[1], '-Command');
-    assert.ok(captured.args[2].includes('irm https://code.kimi.com/kimi-code/install.ps1 | iex'));
-    assert.ok(captured.options.detached);
+    assert.equal(captured.args[0], '-Command');
+    assert.ok(captured.args[1].includes('irm https://code.kimi.com/kimi-code/install.ps1 | iex'));
+    assert.equal(captured.options.stdio, 'pipe');
   });
 
   it('updateKimiCode returns failure when spawn fails', async () => {

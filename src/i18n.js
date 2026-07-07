@@ -33,7 +33,10 @@ const locales = {
     'updateMenu.ksmSuccess': 'ksm 更新成功：{message}',
     'updateMenu.ksmFailed': 'ksm 更新失败：{message}',
     'updateMenu.ksmManual': '请手动运行：git pull',
-    'updateMenu.kimiCodeWindowOpened': '已在新窗口启动 Kimi Code 安装程序，完成后请重新打开终端。',
+    'updateMenu.kimiCodeInstalling': '正在安装 Kimi Code，请稍候...',
+    'updateMenu.kimiCodeSuccess': 'Kimi Code 安装成功。',
+    'updateMenu.kimiCodeFailed': 'Kimi Code 安装失败：{message}',
+    'updateMenu.kimiCodeRestart': '安装完成，请重新打开终端以使用新版本。',
     'updateMenu.kimiCodeManual': '请手动运行：irm https://code.kimi.com/kimi-code/install.ps1 | iex',
 
     'languageMenu.title': '语言：',
@@ -116,7 +119,10 @@ const locales = {
     'updateMenu.ksmSuccess': 'ksm updated: {message}',
     'updateMenu.ksmFailed': 'ksm update failed: {message}',
     'updateMenu.ksmManual': 'Please run manually: git pull',
-    'updateMenu.kimiCodeWindowOpened': 'Kimi Code installer opened in a new window. Please reopen the terminal after it finishes.',
+    'updateMenu.kimiCodeInstalling': 'Installing Kimi Code, please wait...',
+    'updateMenu.kimiCodeSuccess': 'Kimi Code installed successfully.',
+    'updateMenu.kimiCodeFailed': 'Kimi Code installation failed: {message}',
+    'updateMenu.kimiCodeRestart': 'Installation complete. Please reopen the terminal to use the new version.',
     'updateMenu.kimiCodeManual': 'Please run manually: irm https://code.kimi.com/kimi-code/install.ps1 | iex',
 
     'languageMenu.title': 'Language:',

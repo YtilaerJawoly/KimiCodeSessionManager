@@ -88,6 +88,7 @@ export async function startTui(options = {}) {
       clearLastLine();
       if (shouldInstall) {
         const result = await updateKimiCode();
+        clearLastLine();
         if (result.success) {
           console.log(chalk.green(t('install.success')));
         } else {
