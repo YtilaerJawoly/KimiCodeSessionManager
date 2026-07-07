@@ -53,9 +53,13 @@ export const QUIET_CHECKBOX_THEME = {
  * @param {boolean} [pager=false] 是否需要翻页提示
  */
 export function hint(type, pager = false) {
-  if (type === 'checkbox') return t('checkbox.hint');
-  const key = `${type}.hint${pager ? 'Pager' : ''}`;
-  return t(key);
+  if (type === 'checkbox') {
+    return { navigation: t('checkbox.hint') };
+  }
+  return {
+    navigation: t(`${type}.hint`),
+    pager: t(`${type}.hintPager`),
+  };
 }
 
 /** 最近会话列表中项目名称列宽 */
