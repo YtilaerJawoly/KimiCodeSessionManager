@@ -82,7 +82,7 @@ describe('updater', () => {
     const result = await checkKsmVersion('/any/dir', spawn);
     assert.equal(captured.cmd, 'git');
     assert.deepEqual(captured.args, ['ls-remote', '--tags', 'origin']);
-    assert.equal(result.current, '1.0.1');
+    assert.equal(result.current, '1.0.2');
     assert.equal(result.latest, '1.0.0');
     assert.equal(result.hasUpdate, false);
   });
@@ -94,24 +94,24 @@ describe('updater', () => {
     ].join('\n');
     const spawn = makeMockSpawn({ code: 0, stdout });
     const result = await checkKsmVersion('/any/dir', spawn);
-    assert.equal(result.current, '1.0.1');
+    assert.equal(result.current, '1.0.2');
     assert.equal(result.latest, '');
     assert.equal(result.hasUpdate, false);
   });
 
   it('checkKsmVersion returns no update when already on latest stable', async () => {
-    const stdout = 'aabbccdd00112233\trefs/tags/v1.0.1\n';
+    const stdout = 'aabbccdd00112233\trefs/tags/v1.0.2\n';
     const spawn = makeMockSpawn({ code: 0, stdout });
     const result = await checkKsmVersion('/any/dir', spawn);
-    assert.equal(result.current, '1.0.1');
-    assert.equal(result.latest, '1.0.1');
+    assert.equal(result.current, '1.0.2');
+    assert.equal(result.latest, '1.0.2');
     assert.equal(result.hasUpdate, false);
   });
 
   it('checkKsmVersion stays silent when git command fails', async () => {
     const spawn = makeMockSpawn({ code: 1, stderr: 'fatal: unable to access' });
     const result = await checkKsmVersion('/any/dir', spawn);
-    assert.equal(result.current, '1.0.1');
+    assert.equal(result.current, '1.0.2');
     assert.equal(result.latest, '');
     assert.equal(result.hasUpdate, false);
   });

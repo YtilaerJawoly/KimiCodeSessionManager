@@ -1,6 +1,6 @@
 {
   "name": "kimi-session-manager",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Manage and quickly resume Kimi Code sessions by project",
   "type": "module",
   "license": "MIT",
