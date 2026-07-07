@@ -46,15 +46,17 @@ describe('process', () => {
       return makeMockSpawn({ code: 0, stdout: 'done' })();
     };
 
-    Object.defineProperty(process, 'platform', { value: 'win32' });
-    await runPowerShell('Get-Date', {}, spawn);
-    assert.equal(captured.cmd, 'powershell.exe');
+    try {
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      await runPowerShell('Get-Date', {}, spawn);
+      assert.equal(captured.cmd, 'powershell.exe');
 
-    Object.defineProperty(process, 'platform', { value: 'darwin' });
-    await runPowerShell('Get-Date', {}, spawn);
-    assert.equal(captured.cmd, 'pwsh');
-
-    Object.defineProperty(process, 'platform', originalPlatform);
+      Object.defineProperty(process, 'platform', { value: 'darwin' });
+      await runPowerShell('Get-Date', {}, spawn);
+      assert.equal(captured.cmd, 'pwsh');
+    } finally {
+      Object.defineProperty(process, 'platform', originalPlatform);
+    }
   });
 
   it('runCommandWithTimeout kills child and returns failure on timeout', async () => {
