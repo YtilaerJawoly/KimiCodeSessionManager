@@ -20,6 +20,7 @@ import { runPowerShell } from './process.js';
  * 为指定 start.exe 创建桌面快捷方式。
  *
  * @param {string} startExePath start.exe 的绝对或相对路径
+ * @param {Function} [spawner=spawn] 用于测试注入的子进程启动函数
  * @returns {Promise<{success: boolean, message: string}>}
  */
 export async function createDesktopShortcut(startExePath, spawner = spawn) {
@@ -43,9 +44,9 @@ export async function createDesktopShortcut(startExePath, spawner = spawn) {
     $Shortcut.Save()
   `.trim();
 
-  const result = await runPowerShell(ps, { stdio: 'pipe' }, spawner);
+  const result = await runPowerShell(ps, {}, spawner);
   if (result.success) {
     return { success: true, message: lnk };
   }
-  return { success: false, message: result.stderr.trim() || `exit code ${result.code}` };
+  return { success: false, message: result.message || `exit code ${result.code}` };
 }
