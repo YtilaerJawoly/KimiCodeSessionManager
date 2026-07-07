@@ -13,7 +13,7 @@ import {
   updateKimiCode,
 } from '../updater.js';
 import { printWelcome, getKimiVersion } from './welcome.js';
-import { clearLastLine, formatTime, ROOT_DIR, QUIET_SELECT_THEME } from './helpers.js';
+import { clearLastLine, formatTime, ROOT_DIR, QUIET_SELECT_THEME, hint } from './helpers.js';
 import {
   recentSessionsMenu,
   updateMenu,
@@ -80,6 +80,7 @@ export async function startTui(options = {}) {
       const shouldInstall = await select({
         message: t('install.title'),
         theme: QUIET_SELECT_THEME,
+        instructions: hint('select'),
         choices: [
           { name: t('install.yes'), value: true },
           { name: t('install.no'), value: false },
@@ -149,6 +150,7 @@ async function mainMenu(env, options = {}) {
     const prompt = select({
       message: t('mainMenu.title'),
       theme: QUIET_SELECT_THEME,
+      instructions: hint('select'),
       choices: [
         { name: t('mainMenu.recent'), value: 'recent' },
         { name: t('mainMenu.update'), value: 'update' },

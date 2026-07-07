@@ -24,6 +24,7 @@ import {
   QUIET_CHECKBOX_THEME,
   promptWithCancel,
   ROOT_DIR,
+  hint,
 } from './helpers.js';
 
 /**
@@ -48,6 +49,7 @@ export async function updateMenu(env, messages = []) {
       message: t('updateMenu.title'),
       theme: QUIET_SELECT_THEME,
       default: 'ksm',
+      instructions: hint('select'),
       choices: [
         { name: t('updateMenu.back'), value: 'back' },
         { name: t('updateMenu.ksm'), value: 'ksm' },
@@ -100,6 +102,7 @@ export async function languageMenu(env, messages = []) {
     message: t('languageMenu.title'),
     theme: QUIET_SELECT_THEME,
     default: current,
+    instructions: hint('select'),
     choices: [
       { name: t('languageMenu.back'), value: 'back' },
       { name: t('languageMenu.zhCN'), value: 'zh-CN' },
@@ -123,6 +126,7 @@ export async function shortcutSettingsMenu(env, messages = []) {
       message: t('settingsMenu.title'),
       theme: QUIET_SELECT_THEME,
       default: 'desktop',
+      instructions: hint('select'),
       choices: [
         { name: t('settingsMenu.back'), value: 'back' },
         { name: t('settingsMenu.desktop'), value: 'desktop' },
@@ -169,13 +173,8 @@ export async function recentSessionsMenu(env, messages = []) {
 
     const selectedPath = await promptWithCancel(() => search({
       message: t('recentMenu.title'),
-      theme: {
-        prefix: '',
-        style: {
-          message: (text) => chalk.cyan(text),
-          answer: () => '',
-        },
-      },
+      theme: QUIET_SEARCH_THEME,
+      instructions: hint('search'),
       source: (input = '') => {
         const term = input.trim();
         const results = term ? fuse.search(term).map(r => r.item) : projects;
@@ -229,6 +228,7 @@ async function projectMenu(project, env) {
       message: t('projectMenu.title', { name: currentProject.name }),
       theme: QUIET_SELECT_THEME,
       default: 'continue-latest',
+      instructions: hint('select'),
       choices,
     }));
     clearLastLine();
@@ -284,6 +284,7 @@ export async function messagesMenu(messages) {
   const selected = await promptWithCancel(() => select({
     message: t('messagesMenu.title'),
     theme: QUIET_SELECT_THEME,
+    instructions: hint('select'),
     choices,
     pageSize: 15,
   }));
@@ -314,6 +315,7 @@ async function historyMenu(project) {
   const sid = await promptWithCancel(() => select({
     message: t('historyMenu.title'),
     theme: QUIET_SELECT_THEME,
+    instructions: hint('select'),
     choices,
     pageSize: 15,
     default: project.sessions[0]?.id,
@@ -339,7 +341,7 @@ async function cleanupMenu(project, env) {
   ];
 
   const ids = await promptWithCancel(
-    () => checkbox({ message: t('cleanupMenu.title'), choices, theme: QUIET_CHECKBOX_THEME }),
+    () => checkbox({ message: t('cleanupMenu.title'), choices, theme: QUIET_CHECKBOX_THEME, instructions: hint('checkbox') }),
     ['back']
   );
   if (ids.length === 0 || ids.includes('back')) return;
@@ -348,6 +350,7 @@ async function cleanupMenu(project, env) {
     message: t('cleanupMenu.modeTitle'),
     theme: QUIET_SELECT_THEME,
     default: 'delete',
+    instructions: hint('select'),
     choices: [
       { name: t('cleanupMenu.delete'), value: 'delete' },
       { name: t('cleanupMenu.archive'), value: 'archive' },

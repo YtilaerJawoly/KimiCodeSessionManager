@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import chalk from 'chalk';
-import { getLocale } from '../i18n.js';
+import { getLocale, t } from '../i18n.js';
 
 /**
  * TUI 通用工具与常量模块
@@ -34,7 +34,7 @@ export const QUIET_SELECT_THEME = {
 export const QUIET_SEARCH_THEME = {
   prefix: '',
   style: {
-    message: () => '',
+    message: (text) => chalk.cyan(text),
     answer: () => '',
   },
 };
@@ -46,6 +46,17 @@ export const QUIET_CHECKBOX_THEME = {
     answer: () => '',
   },
 };
+
+/**
+ * 生成选择器底部操作提示（跟随当前语言）。
+ * @param {string} type 'select' | 'search' | 'checkbox'
+ * @param {boolean} [pager=false] 是否需要翻页提示
+ */
+export function hint(type, pager = false) {
+  if (type === 'checkbox') return t('checkbox.hint');
+  const key = `${type}.hint${pager ? 'Pager' : ''}`;
+  return t(key);
+}
 
 /** 最近会话列表中项目名称列宽 */
 export const NAME_WIDTH = 22;
