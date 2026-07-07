@@ -11,9 +11,9 @@
  *   - 可执行文件版本解析逻辑从 updater.js 迁移至此，避免 welcome.js 直接依赖 updater.js。
  */
 
-import { spawn } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { runCommand } from './process.js';
 
 /**
  * 读取 Kimi Code 的最新版本号。
@@ -35,27 +35,18 @@ export function readKimiLatestVersion(home) {
  * 读取本地安装的 Kimi Code 版本号。
  *
  * @param {string} home Kimi home 目录
+ * @param {Function} [spawner] 可选的 spawn 实现，用于测试
  * @returns {Promise<string>} 版本号；未安装或读取失败返回空字符串
  */
-export async function getKimiInstalledVersion(home) {
+export async function getKimiInstalledVersion(home, spawner) {
   const exe = join(home, 'bin', 'kimi.exe');
   if (!existsSync(exe)) return '';
 
-  return new Promise((resolve) => {
-    const child = spawn(exe, ['--version'], { shell: false });
-    let stdout = '';
-    let stderr = '';
-    child.stdout?.on('data', (data) => { stdout += data; });
-    child.stderr?.on('data', (data) => { stderr += data; });
-    child.on('error', () => resolve(''));
-    child.on('close', (code) => {
-      const output = (stdout || stderr).trim();
-      if (code !== 0 || !output) {
-        resolve('');
-        return;
-      }
-      const match = output.match(/(?:kimi\s+)?v?(\d+\.\d+(?:\.\d+)?)/i);
-      resolve(match ? match[1] : output);
-    });
-  });
+  const result = await runCommand(exe, ['--version'], {}, spawner);
+  if (!result.success) return '';
+
+  const output = result.stdout.trim() || result.stderr.trim();
+  if (!output) return '';
+  const match = output.match(/(?:kimi\s+)?v?(\d+\.\d+(?:\.\d+)?)/i);
+  return match ? match[1] : output;
 }
