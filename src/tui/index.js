@@ -5,6 +5,7 @@ import {
   acquireInstanceLock,
   releaseInstanceLock,
   loadKsmConfig,
+  saveKsmConfig,
 } from '../config.js';
 import { setLocale, t } from '../i18n.js';
 import {
@@ -12,6 +13,7 @@ import {
   checkKsmVersion,
   updateKimiCode,
 } from '../updater.js';
+import { getKimiCodeQuota } from '../quota.js';
 import { printWelcome, getKimiVersion } from './welcome.js';
 import { clearLastLine, formatTime, ROOT_DIR, QUIET_SELECT_THEME, hint } from './helpers.js';
 import {
@@ -61,12 +63,13 @@ export async function startTui(options = {}) {
     }
     lockAcquired = true;
 
-    // 加载持久化配置（目前仅语言）
+    // 加载持久化配置（语言、额度显示开关）
     const config = loadKsmConfig(env);
     if (config.locale) setLocale(config.locale);
 
     const kimiVersion = await getKimiVersion(env);
-    printWelcome(kimiVersion);
+    const quotaState = await refreshQuotaState(config.showQuota);
+    printWelcome(kimiVersion, [], quotaState.text, quotaState.show);
 
     // 并行检查 Kimi Code 与 ksm 更新，不阻塞菜单首次渲染
     const versionPromise = Promise.all([
@@ -99,7 +102,7 @@ export async function startTui(options = {}) {
       }
     }
 
-    await mainMenu(env, { versionPromise, initialCodeStatus });
+    await mainMenu(env, { versionPromise, initialCodeStatus, quotaState });
   } catch (err) {
     if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
       return;
@@ -111,6 +114,15 @@ export async function startTui(options = {}) {
       releaseInstanceLock(env);
     }
   }
+}
+
+/**
+ * 异步刷新 Kimi Code Plan 额度，超时或失败时静默降级。
+ */
+async function refreshQuotaState(showQuota) {
+  if (!showQuota) return { show: false, text: '' };
+  const result = await getKimiCodeQuota();
+  return { show: true, text: result.success ? result.remaining : '' };
 }
 
 /**
@@ -134,18 +146,37 @@ function buildMessages(kimiCodeStatus, ksmStatus) {
  * 主菜单循环。
  */
 async function mainMenu(env, options = {}) {
-  const { versionPromise, initialCodeStatus = {} } = options;
+  const { versionPromise, initialCodeStatus = {}, quotaState } = options;
   let messages = [];
   let checked = false;
   let pendingPromise = versionPromise || null;
+  let showQuota = quotaState?.show ?? false;
+  let quotaText = quotaState?.text ?? '';
 
   if (!pendingPromise) {
     messages = buildMessages(initialCodeStatus, {});
   }
 
+  const setShowQuota = (value) => {
+    showQuota = value;
+    saveKsmConfig({ ...loadKsmConfig(env), showQuota: value }, env);
+  };
+
+  const refreshQuota = async () => {
+    const state = await refreshQuotaState(showQuota);
+    quotaText = state.text;
+  };
+
+  const menuOptions = () => ({
+    showQuota,
+    setShowQuota,
+    refreshQuota,
+    quotaText,
+  });
+
   while (true) {
     const kimiVersion = await getKimiVersion(env);
-    printWelcome(kimiVersion, messages);
+    printWelcome(kimiVersion, messages, quotaText, showQuota);
 
     const prompt = select({
       message: t('mainMenu.title'),
@@ -188,19 +219,19 @@ async function mainMenu(env, options = {}) {
 
     switch (action) {
       case 'recent':
-        await recentSessionsMenu(env, messages);
+        await recentSessionsMenu(env, messages, menuOptions());
         break;
       case 'update':
-        await updateMenu(env, messages);
+        await updateMenu(env, messages, menuOptions());
         break;
       case 'language':
-        await languageMenu(env, messages);
+        await languageMenu(env, messages, menuOptions());
         break;
       case 'messages':
         await messagesMenu(messages);
         break;
       case 'settings':
-        await shortcutSettingsMenu(env, messages);
+        await shortcutSettingsMenu(env, messages, menuOptions());
         break;
       case 'exit':
       default:

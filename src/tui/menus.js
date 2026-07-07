@@ -43,7 +43,7 @@ import {
 /**
  * 更新菜单。
  */
-export async function updateMenu(env, messages = []) {
+export async function updateMenu(env, messages = [], options = {}) {
   while (true) {
     const action = await promptWithCancel(() => select({
       message: t('updateMenu.title'),
@@ -67,8 +67,7 @@ export async function updateMenu(env, messages = []) {
           console.error(chalk.red(t('updateMenu.ksmFailed', { message: result.message })));
           console.log(chalk.yellow(t('updateMenu.ksmManual')));
         }
-        // 刷新欢迎界面，保持消息区可见
-        printWelcome(await getKimiVersion(env), messages);
+        printWelcome(await getKimiVersion(env), messages, options.quotaText, options.showQuota);
         break;
       }
       case 'kimiCode': {
@@ -82,8 +81,7 @@ export async function updateMenu(env, messages = []) {
           console.error(chalk.red(t('updateMenu.kimiCodeFailed', { message: result.message })));
           console.log(chalk.yellow(t('updateMenu.kimiCodeManual')));
         }
-        // 刷新欢迎界面，显示新的 Kimi Code 版本并保持消息区可见
-        printWelcome(await getKimiVersion(env), messages);
+        printWelcome(await getKimiVersion(env), messages, options.quotaText, options.showQuota);
         break;
       }
       case 'back':
@@ -96,7 +94,7 @@ export async function updateMenu(env, messages = []) {
 /**
  * 语言切换菜单。
  */
-export async function languageMenu(env, messages = []) {
+export async function languageMenu(env, messages = [], options = {}) {
   const current = getLocale();
   const action = await promptWithCancel(() => select({
     message: t('languageMenu.title'),
@@ -113,15 +111,20 @@ export async function languageMenu(env, messages = []) {
   if (action && action !== 'back' && action !== current) {
     setLocale(action);
     saveKsmConfig({ locale: action }, env);
-    printWelcome(await getKimiVersion(env), messages);
+    printWelcome(await getKimiVersion(env), messages, options.quotaText, options.showQuota);
   }
 }
 
 /**
  * 快捷设置菜单。
  */
-export async function shortcutSettingsMenu(env, messages = []) {
+export async function shortcutSettingsMenu(env, messages = [], options = {}) {
+  const { showQuota, setShowQuota, refreshQuota, quotaText } = options;
   while (true) {
+    const quotaToggleLabel = showQuota
+      ? t('settingsMenu.quotaToggle', { state: t('settingsMenu.quotaOn') })
+      : t('settingsMenu.quotaToggle', { state: t('settingsMenu.quotaOff') });
+
     const action = await promptWithCancel(() => select({
       message: t('settingsMenu.title'),
       theme: QUIET_SELECT_THEME,
@@ -130,6 +133,8 @@ export async function shortcutSettingsMenu(env, messages = []) {
       choices: [
         { name: t('settingsMenu.back'), value: 'back' },
         { name: t('settingsMenu.desktop'), value: 'desktop' },
+        { name: quotaToggleLabel, value: 'quota-toggle' },
+        { name: t('settingsMenu.quotaSetToken'), value: 'quota-token' },
       ],
     }));
     clearLastLine();
@@ -142,8 +147,35 @@ export async function shortcutSettingsMenu(env, messages = []) {
         } else {
           console.error(chalk.red(t('settingsMenu.desktopFailed', { message: result.message })));
         }
-        // 刷新欢迎界面，保持消息区可见
-        printWelcome(await getKimiVersion(env), messages);
+        printWelcome(await getKimiVersion(env), messages, quotaText, showQuota);
+        break;
+      }
+      case 'quota-toggle': {
+        setShowQuota(!showQuota);
+        printWelcome(await getKimiVersion(env), messages, quotaText, !showQuota);
+        break;
+      }
+      case 'quota-token': {
+        const { input } = await import('@inquirer/prompts');
+        const { loadKimiAccessToken, saveKimiAccessToken } = await import('../config.js');
+        const token = await promptWithCancel(() => input({
+          message: t('settingsMenu.quotaSetToken'),
+          theme: QUIET_SELECT_THEME,
+          default: loadKimiAccessToken(),
+        }), '');
+        clearLastLine();
+        if (typeof token === 'string') {
+          if (token.trim()) {
+            saveKimiAccessToken(token.trim());
+            await refreshQuota();
+            console.log(chalk.green(t('settingsMenu.quotaTokenSaved')));
+          } else {
+            saveKimiAccessToken('');
+            await refreshQuota();
+            console.log(chalk.yellow(t('settingsMenu.quotaTokenCleared')));
+          }
+        }
+        printWelcome(await getKimiVersion(env), messages, quotaText, showQuota);
         break;
       }
       case 'back':
@@ -159,7 +191,7 @@ export async function shortcutSettingsMenu(env, messages = []) {
 export async function recentSessionsMenu(env, messages = []) {
   while (true) {
     // 清屏并重新绘制欢迎界面，避免主菜单残留消息导致视觉上选项下移
-    printWelcome(await getKimiVersion(env), messages);
+    printWelcome(await getKimiVersion(env), messages, options.quotaText, options.showQuota);
 
     const sessions = await loadSessions(env);
     const projects = buildProjects(sessions);

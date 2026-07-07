@@ -40,8 +40,10 @@ export async function getKimiVersion(env = process.env) {
  *
  * @param {string} kimiVersion Kimi Code 版本号
  * @param {Array<{level?: string, text: string}>} messages 顶部通知消息
+ * @param {string} [quota] 可选的 Kimi Code Plan 剩余额度
+ * @param {boolean} [showQuota] 是否显示额度
  */
-export function printWelcome(kimiVersion, messages = []) {
+export function printWelcome(kimiVersion, messages = [], quota = '', showQuota = false) {
   // 清屏并把光标移到左上角，保证每次进入菜单都是“重绘”而非追加
   process.stdout.write('\x1B[2J\x1B[H');
 
@@ -62,6 +64,14 @@ export function printWelcome(kimiVersion, messages = []) {
   console.log(accent('│' + ' '.repeat(WELCOME_WIDTH) + '│'));
   console.log(accent(line(LOGO_PREFIX, title)));
   console.log(accent(line(LINE_PREFIX, t('welcome.subtitle', { version: kimiVersion || 'unknown' }))));
+
+  if (showQuota) {
+    const quotaText = quota
+      ? t('welcome.quota', { remaining: quota })
+      : t('welcome.quotaUnavailable');
+    console.log(accent(line(LINE_PREFIX, quotaText)));
+  }
+
   console.log(accent('│' + ' '.repeat(WELCOME_WIDTH) + '│'));
   console.log(accent(bottom));
 
