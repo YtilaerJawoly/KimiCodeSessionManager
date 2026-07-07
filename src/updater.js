@@ -1,5 +1,4 @@
 import { spawn } from 'node:child_process';
-import { platform } from 'node:os';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { getKimiHome } from './config.js';
