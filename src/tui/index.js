@@ -186,13 +186,13 @@ async function mainMenu(env, options = {}) {
 
     switch (action) {
       case 'recent':
-        await recentSessionsMenu(env);
+        await recentSessionsMenu(env, messages);
         break;
       case 'update':
         await updateMenu(env, messages);
         break;
       case 'language':
-        await languageMenu(env);
+        await languageMenu(env, messages);
         break;
       case 'messages':
         await messagesMenu(messages);

@@ -152,7 +152,10 @@ export async function shortcutSettingsMenu(env, messages = []) {
 /**
  * 最近会话菜单：搜索并选择项目。
  */
-export async function recentSessionsMenu(env) {
+export async function recentSessionsMenu(env, messages = []) {
+  // 清屏并重新绘制欢迎界面，避免主菜单残留消息导致视觉上选项下移
+  printWelcome(await getKimiVersion(env), messages);
+
   const sessions = await loadSessions(env);
   const projects = buildProjects(sessions);
 
@@ -165,7 +168,13 @@ export async function recentSessionsMenu(env) {
 
   const selectedPath = await promptWithCancel(() => search({
     message: t('recentMenu.title'),
-    theme: QUIET_SEARCH_THEME,
+    theme: {
+      prefix: '',
+      style: {
+        message: (text) => chalk.cyan(text),
+        answer: () => '',
+      },
+    },
     source: (input = '') => {
       const term = input.trim();
       const results = term ? fuse.search(term).map(r => r.item) : projects;
