@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import chalk from 'chalk';
 import { t } from '../i18n.js';
 import { getKimiHome } from '../config.js';
-import { readKimiLatestVersion } from '../kimi-version.js';
+import { getKimiInstalledVersion } from '../kimi-version.js';
 import {
   WELCOME_WIDTH,
   LOGO_PREFIX,
@@ -16,7 +16,7 @@ import {
  * 欢迎界面渲染模块
  *
  * 职责：
- *   1. 读取 Kimi Code 当前版本号（从 latest.json 提取）。
+ *   1. 读取 Kimi Code 本地安装版本号。
  *   2. 渲染顶部 ASCII 横幅与最多 5 条通知消息。
  *
  * 设计原则：
@@ -27,11 +27,12 @@ import {
 const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
 
 /**
- * 读取 Kimi Code 的最新版本号。
- * 优先从 KIMI_HOME/updates/latest.json 中解析，读取失败返回空字符串。
+ * 读取本地安装的 Kimi Code 版本号。
+ * 未安装或读取失败返回空字符串。
  */
-export function getKimiVersion(env = process.env) {
-  return readKimiLatestVersion(getKimiHome(env));
+export async function getKimiVersion(env = process.env) {
+  const version = await getKimiInstalledVersion(getKimiHome(env));
+  return version;
 }
 
 /**

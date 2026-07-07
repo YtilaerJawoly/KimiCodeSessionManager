@@ -3,8 +3,8 @@ import { platform } from 'node:os';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { getKimiHome } from './config.js';
-import { readKimiLatestVersion } from './kimi-version.js';
-import { findLatestStable, isNewer, parseSemver } from './version.js';
+import { readKimiLatestVersion, getKimiInstalledVersion } from './kimi-version.js';
+import { findLatestStable, isNewer } from './version.js';
 
 /**
  * 更新器模块
@@ -125,38 +125,15 @@ export async function checkKimiCodeVersion(env = process.env) {
     return { installed: false, current: '', latest: readKimiLatestVersion(home), hasUpdate: false };
   }
 
-  const current = await getKimiExecutableVersion(exe);
+  const current = await getKimiInstalledVersion(home);
   const latest = readKimiLatestVersion(home);
 
   return {
     installed: true,
     current,
     latest,
-    hasUpdate: !!current && !!latest && current !== latest,
+    hasUpdate: !!current && !!latest && isNewer(latest, current),
   };
-}
-
-/**
- * 调用 kimi --version 解析当前可执行文件版本号。
- */
-function getKimiExecutableVersion(exe) {
-  return new Promise((resolve) => {
-    const child = spawn(exe, ['--version'], { shell: false });
-    let stdout = '';
-    let stderr = '';
-    child.stdout?.on('data', (data) => { stdout += data; });
-    child.stderr?.on('data', (data) => { stderr += data; });
-    child.on('error', () => resolve(''));
-    child.on('close', (code) => {
-      const output = (stdout || stderr).trim();
-      if (code !== 0 || !output) {
-        resolve('');
-        return;
-      }
-      const match = output.match(/(?:kimi\s+)?v?(\d+\.\d+(?:\.\d+)?)/i);
-      resolve(match ? match[1] : output);
-    });
-  });
 }
 
 /**

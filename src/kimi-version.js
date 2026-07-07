@@ -1,16 +1,19 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
 /**
  * Kimi Code 版本信息工具模块
  *
  * 职责：
  *   1. 从 KIMI_HOME/updates/latest.json 读取 Kimi Code 的最新版本号。
+ *   2. 提供 getKimiInstalledVersion() 读取本地 kimi.exe 的实际版本号。
  *
  * 设计原则：
  *   - 欢迎界面（tui/welcome.js）与更新检查器（updater.js）都需要读取该文件，
  *     集中实现可避免重复解析逻辑。
+ *   - 可执行文件版本解析逻辑从 updater.js 迁移至此，避免 welcome.js 直接依赖 updater.js。
  */
+
+import { spawn } from 'node:child_process';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * 读取 Kimi Code 的最新版本号。
@@ -26,4 +29,33 @@ export function readKimiLatestVersion(home) {
   } catch {
     return '';
   }
+}
+
+/**
+ * 读取本地安装的 Kimi Code 版本号。
+ *
+ * @param {string} home Kimi home 目录
+ * @returns {Promise<string>} 版本号；未安装或读取失败返回空字符串
+ */
+export async function getKimiInstalledVersion(home) {
+  const exe = join(home, 'bin', 'kimi.exe');
+  if (!existsSync(exe)) return '';
+
+  return new Promise((resolve) => {
+    const child = spawn(exe, ['--version'], { shell: false });
+    let stdout = '';
+    let stderr = '';
+    child.stdout?.on('data', (data) => { stdout += data; });
+    child.stderr?.on('data', (data) => { stderr += data; });
+    child.on('error', () => resolve(''));
+    child.on('close', (code) => {
+      const output = (stdout || stderr).trim();
+      if (code !== 0 || !output) {
+        resolve('');
+        return;
+      }
+      const match = output.match(/(?:kimi\s+)?v?(\d+\.\d+(?:\.\d+)?)/i);
+      resolve(match ? match[1] : output);
+    });
+  });
 }

@@ -65,7 +65,7 @@ export async function startTui(options = {}) {
     const config = loadKsmConfig(env);
     if (config.locale) setLocale(config.locale);
 
-    const kimiVersion = getKimiVersion(env);
+    const kimiVersion = await getKimiVersion(env);
     printWelcome(kimiVersion);
 
     // 并行检查 Kimi Code 与 ksm 更新，不阻塞菜单首次渲染
@@ -142,7 +142,7 @@ async function mainMenu(env, options = {}) {
   }
 
   while (true) {
-    const kimiVersion = getKimiVersion(env);
+    const kimiVersion = await getKimiVersion(env);
     printWelcome(kimiVersion, messages);
 
     const prompt = select({
