@@ -148,11 +148,11 @@ if (!result.success) return '';
 ```js
 import { runPowerShell } from './process.js';
 
-const result = await runPowerShell(ps, { stdio: 'pipe' });
+const result = await runPowerShell(ps, {}, spawner);
 if (result.success) {
   return { success: true, message: lnk };
 }
-return { success: false, message: result.stderr.trim() || `exit code ${result.code}` };
+return { success: false, message: result.message || `exit code ${result.code}` };
 ```
 
 #### `src/kimi-version.js`

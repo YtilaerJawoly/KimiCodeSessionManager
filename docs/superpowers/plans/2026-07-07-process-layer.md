@@ -442,11 +442,11 @@ export async function createDesktopShortcut(startExePath, spawner = spawn) {
     $Shortcut.Save()
   `.trim();
 
-  const result = await runPowerShell(ps, { stdio: 'pipe' }, spawner);
+  const result = await runPowerShell(ps, {}, spawner);
   if (result.success) {
     return { success: true, message: lnk };
   }
-  return { success: false, message: result.stderr.trim() || `exit code ${result.code}` };
+  return { success: false, message: result.message || `exit code ${result.code}` };
 }
 ```
 

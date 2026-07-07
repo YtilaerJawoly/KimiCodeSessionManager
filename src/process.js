@@ -76,13 +76,22 @@ function runWithStdio(cmd, args, options, spawner) {
     const child = spawner(cmd, args, options);
     let stdout = '';
     let stderr = '';
+    let settled = false;
 
     child.stdout?.on('data', (data) => { stdout += data; });
     child.stderr?.on('data', (data) => { stderr += data; });
-    child.on('error', (err) => resolve({
-      success: false, code: null, stdout, stderr, message: err.message,
-    }));
-    child.on('close', (code) => resolve(buildResult(code, stdout, stderr)));
+    child.on('error', (err) => {
+      if (settled) return;
+      settled = true;
+      resolve({
+        success: false, code: null, stdout, stderr, message: err.message,
+      });
+    });
+    child.on('close', (code) => {
+      if (settled) return;
+      settled = true;
+      resolve(buildResult(code, stdout, stderr));
+    });
   });
 }
 
