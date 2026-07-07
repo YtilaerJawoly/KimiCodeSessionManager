@@ -72,12 +72,22 @@ After launch you enter the interactive TUI:
 │   ├── actions.js      Session continue / create actions
 │   ├── cleanup.js      Session delete and archive
 │   ├── config.js       Config and single-instance lock
+│   ├── error-handler.jsGlobal error handler
 │   ├── i18n.js         Chinese / English internationalization
+│   ├── kimi-version.js Kimi Code version reader
 │   ├── loader.js       Session scanning and loading
+│   ├── process.js      Child process execution wrapper
 │   ├── shortcut.js     Desktop shortcut creation
 │   ├── store.js        Project grouping and queries
-│   ├── tui.js          Interactive TUI
-│   └── updater.js      Update logic
+│   ├── tui/            Interactive TUI
+│   │   ├── helpers.js  TUI utilities and themes
+│   │   ├── index.js    TUI entry and main menu
+│   │   ├── menus.js    Sub-menu collection
+│   │   └── welcome.js  Welcome banner
+│   ├── updater.js      Update logic
+│   └── version.js      Version comparison and stable tag parser
+├── scripts/
+│   └── start.cs        Windows start.exe source
 ├── tests/              Unit tests
 ├── start.ps1           Windows PowerShell launcher
 └── start.exe           Windows executable launcher

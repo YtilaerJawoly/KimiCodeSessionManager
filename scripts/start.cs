@@ -21,7 +21,7 @@ class Program
         ProcessStartInfo psi = new ProcessStartInfo
         {
             FileName = "powershell.exe",
-            Arguments = $"-ExecutionPolicy Bypass -NoProfile -Command \"Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','{Escape(ps1Path)}'\"",
+            Arguments = string.Format("-ExecutionPolicy Bypass -NoProfile -Command \"Start-Process powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','{0}'\"", Escape(ps1Path)),
             WorkingDirectory = exeDir,
             UseShellExecute = false,
             CreateNoWindow = false,

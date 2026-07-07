@@ -72,12 +72,22 @@ ksm --home /path/to/.kimi-code
 │   ├── actions.js      会话继续/新建操作
 │   ├── cleanup.js      会话删除与归档
 │   ├── config.js       配置、单实例锁
+│   ├── error-handler.js全局错误处理
 │   ├── i18n.js         中英文国际化
+│   ├── kimi-version.js Kimi Code 版本读取
 │   ├── loader.js       会话扫描与加载
+│   ├── process.js      子进程执行封装
 │   ├── shortcut.js     桌面快捷方式
 │   ├── store.js        项目聚合与查询
-│   ├── tui.js          交互式 TUI
-│   └── updater.js      更新逻辑
+│   ├── tui/            交互式 TUI
+│   │   ├── helpers.js  TUI 工具与主题
+│   │   ├── index.js    TUI 入口与主菜单
+│   │   ├── menus.js    子菜单集合
+│   │   └── welcome.js  欢迎界面
+│   ├── updater.js      更新逻辑
+│   └── version.js      版本比较与稳定版解析
+├── scripts/
+│   └── start.cs        Windows start.exe 源码
 ├── tests/              单元测试
 ├── start.ps1           Windows PowerShell 启动脚本
 └── start.exe           Windows 可执行启动入口
