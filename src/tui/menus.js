@@ -153,56 +153,58 @@ export async function shortcutSettingsMenu(env, messages = []) {
  * 最近会话菜单：搜索并选择项目。
  */
 export async function recentSessionsMenu(env, messages = []) {
-  // 清屏并重新绘制欢迎界面，避免主菜单残留消息导致视觉上选项下移
-  printWelcome(await getKimiVersion(env), messages);
+  while (true) {
+    // 清屏并重新绘制欢迎界面，避免主菜单残留消息导致视觉上选项下移
+    printWelcome(await getKimiVersion(env), messages);
 
-  const sessions = await loadSessions(env);
-  const projects = buildProjects(sessions);
+    const sessions = await loadSessions(env);
+    const projects = buildProjects(sessions);
 
-  if (projects.length === 0) {
-    console.log(chalk.yellow(t('recentMenu.noProjects')));
-    return;
-  }
+    if (projects.length === 0) {
+      console.log(chalk.yellow(t('recentMenu.noProjects')));
+      return;
+    }
 
-  const fuse = new Fuse(projects, FUSE_OPTIONS);
+    const fuse = new Fuse(projects, FUSE_OPTIONS);
 
-  const selectedPath = await promptWithCancel(() => search({
-    message: t('recentMenu.title'),
-    theme: {
-      prefix: '',
-      style: {
-        message: (text) => chalk.cyan(text),
-        answer: () => '',
+    const selectedPath = await promptWithCancel(() => search({
+      message: t('recentMenu.title'),
+      theme: {
+        prefix: '',
+        style: {
+          message: (text) => chalk.cyan(text),
+          answer: () => '',
+        },
       },
-    },
-    source: (input = '') => {
-      const term = input.trim();
-      const results = term ? fuse.search(term).map(r => r.item) : projects;
-      return [
-        ...results.map(p => {
-          const name = truncate(p.name, 20);
-          const path = chalk.gray(truncate(p.path, PATH_WIDTH - 2));
-          const meta = chalk.dim(`(${t('recentMenu.sessionMeta', { count: p.sessionCount, time: formatTime(p.lastUpdated) })})`);
-          return {
-            name: `${padEnd(name, NAME_WIDTH)}${padEnd(path, PATH_WIDTH)}${meta}`,
-            value: p.path,
-            description: t('recentMenu.latest', { title: truncate(getLatestSession(p).title, 60) }),
-          };
-        }),
-        { name: t('recentMenu.back'), value: 'back' },
-      ];
-    },
-  }));
+      source: (input = '') => {
+        const term = input.trim();
+        const results = term ? fuse.search(term).map(r => r.item) : projects;
+        return [
+          ...results.map(p => {
+            const name = truncate(p.name, 20);
+            const path = chalk.gray(truncate(p.path, PATH_WIDTH - 2));
+            const meta = chalk.dim(`(${t('recentMenu.sessionMeta', { count: p.sessionCount, time: formatTime(p.lastUpdated) })})`);
+            return {
+              name: `${padEnd(name, NAME_WIDTH)}${padEnd(path, PATH_WIDTH)}${meta}`,
+              value: p.path,
+              description: t('recentMenu.latest', { title: truncate(getLatestSession(p).title, 60) }),
+            };
+          }),
+          { name: t('recentMenu.back'), value: 'back' },
+        ];
+      },
+    }));
 
-  if (selectedPath === 'back') return;
+    if (selectedPath === 'back') return;
 
-  const project = findProjectByPath(projects, selectedPath);
-  if (!project) {
-    console.warn(chalk.yellow(t('recentMenu.projectNotFound')));
-    return;
+    const project = findProjectByPath(projects, selectedPath);
+    if (!project) {
+      console.warn(chalk.yellow(t('recentMenu.projectNotFound')));
+      continue;
+    }
+
+    await projectMenu(project, env);
   }
-
-  await projectMenu(project, env);
 }
 
 /**
