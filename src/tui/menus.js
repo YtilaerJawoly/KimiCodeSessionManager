@@ -188,7 +188,7 @@ export async function shortcutSettingsMenu(env, messages = [], options = {}) {
 /**
  * 最近会话菜单：搜索并选择项目。
  */
-export async function recentSessionsMenu(env, messages = []) {
+export async function recentSessionsMenu(env, messages = [], options = {}) {
   while (true) {
     // 清屏并重新绘制欢迎界面，避免主菜单残留消息导致视觉上选项下移
     printWelcome(await getKimiVersion(env), messages, options.quotaText, options.showQuota);
@@ -234,14 +234,14 @@ export async function recentSessionsMenu(env, messages = []) {
       continue;
     }
 
-    await projectMenu(project, env);
+    await projectMenu(project, env, options);
   }
 }
 
 /**
  * 项目菜单：对单个项目继续、新建、查看历史或清理会话。
  */
-async function projectMenu(project, env) {
+async function projectMenu(project, env, options = {}) {
   while (true) {
     const sessions = await loadSessions(env);
     const projects = buildProjects(sessions);
@@ -273,7 +273,7 @@ async function projectMenu(project, env) {
         }
         break;
       case 'history':
-        if (currentProject.sessions.length > 0) await historyMenu(currentProject);
+        if (currentProject.sessions.length > 0) await historyMenu(currentProject, options);
         break;
       case 'new':
         await createSession(currentProject.path, currentProject.name);
@@ -281,7 +281,7 @@ async function projectMenu(project, env) {
         break;
       case 'cleanup':
         if (currentProject.sessions.length > 0) {
-          await cleanupMenu(currentProject, env);
+          await cleanupMenu(currentProject, env, options);
           const refreshed = await loadSessions(env);
           const refreshedProjects = buildProjects(refreshed);
           if (!findProjectByPath(refreshedProjects, currentProject.path)) {
@@ -334,7 +334,7 @@ export async function messagesMenu(messages) {
 /**
  * 项目历史会话菜单。
  */
-async function historyMenu(project) {
+async function historyMenu(project, options = {}) {
   const choices = [
     { name: t('historyMenu.back'), value: 'back' },
     ...project.sessions.map(s => ({
@@ -361,7 +361,7 @@ async function historyMenu(project) {
 /**
  * 会话清理菜单：删除或归档选中的会话。
  */
-async function cleanupMenu(project, env) {
+async function cleanupMenu(project, env, options = {}) {
   const { checkbox } = await import('@inquirer/prompts');
   const choices = [
     { name: t('cleanupMenu.back'), value: 'back' },
