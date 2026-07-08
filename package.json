@@ -9,7 +9,6 @@
     "bin/",
     "src/",
     "scripts/",
-    "start.exe",
     "start.ps1",
     "start.sh",
     "README.md",
