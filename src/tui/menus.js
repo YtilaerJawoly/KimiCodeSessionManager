@@ -376,6 +376,7 @@ async function cleanupMenu(project, env) {
     () => checkbox({ message: t('cleanupMenu.title'), choices, theme: QUIET_CHECKBOX_THEME, instructions: hint('checkbox') }),
     ['back']
   );
+  clearLastLine();
   if (ids.length === 0 || ids.includes('back')) return;
 
   const mode = await promptWithCancel(() => select({
