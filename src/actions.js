@@ -181,7 +181,9 @@ async function createTempPowerShellScript(cwd, title, args, kimiPath) {
   ).join(' ');
 
   const script = `
-Set-Location '${safeCwd}'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+Set-Location -LiteralPath '${safeCwd}'
 $Host.UI.RawUI.WindowTitle = '${safeTitle}'
 try {
   & '${safeKimi}' ${safeArgs}
@@ -198,7 +200,10 @@ try {
   const tmpFile = pathResolve(tmpDir, `ksm-launcher-${Date.now()}.ps1`);
   // 保证临时目录存在，避免首次运行或目录被删除时写入失败
   mkdirSync(tmpDir, { recursive: true });
-  await writeFileAsync(tmpFile, script, 'utf8');
+  // 使用 UTF-8 BOM 编码，避免 PowerShell 5.x 把中文路径识别为 GBK 乱码
+  const bom = Buffer.from([0xEF, 0xBB, 0xBF]);
+  const content = Buffer.from(script, 'utf8');
+  await writeFileAsync(tmpFile, Buffer.concat([bom, content]));
   return tmpFile;
 }
 
