@@ -2,8 +2,6 @@ import process from 'node:process';
 import { select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import {
-  acquireInstanceLock,
-  releaseInstanceLock,
   loadKsmConfig,
   saveKsmConfig,
 } from '../config.js';
@@ -30,7 +28,7 @@ import {
  * TUI 入口与主菜单模块
  *
  * 职责：
- *   1. 启动时获取单实例锁、加载用户配置、设置语言。
+ *   1. 加载用户配置、设置语言。
  *   2. 绘制欢迎界面并检查 Kimi Code 安装状态。
  *   3. 进入主循环，根据用户选择分发到各子菜单。
  *
@@ -48,22 +46,9 @@ import {
  */
 export async function startTui(options = {}) {
   let env;
-  let lockAcquired = false;
 
   try {
     env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
-
-    // 单实例锁：防止同时运行多个 ksm 进程造成竞态
-    const lock = acquireInstanceLock(env);
-    if (!lock.acquired) {
-      const message = lock.pid
-        ? t('error.alreadyRunning', { pid: lock.pid })
-        : t('error.lockFailed', { message: lock.error || '' });
-      console.error(chalk.red(message));
-      process.exitCode = 1;
-      return;
-    }
-    lockAcquired = true;
 
     // 加载持久化配置（语言、额度显示开关）
     const config = loadKsmConfig(env);
@@ -110,10 +95,6 @@ export async function startTui(options = {}) {
     }
     console.error(chalk.red(t('error.prefix', { message: err?.message || err })));
     process.exit(1);
-  } finally {
-    if (lockAcquired && env) {
-      releaseInstanceLock(env);
-    }
   }
 }
 

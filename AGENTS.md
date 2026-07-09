@@ -50,7 +50,7 @@
 ├── src/
 │   ├── actions.js          继续/新建 Kimi Code 会话，负责平台相关的启动逻辑
 │   ├── cleanup.js          删除或归档会话，并同步维护 session_index.jsonl
-│   ├── config.js           Kimi home 解析、配置读写、单实例锁
+│   ├── config.js           Kimi home 解析、配置读写
 │   ├── error-handler.js    全局异常兜底与致命错误输出
 │   ├── i18n.js             中英文国际化文案与翻译函数
 │   ├── kimi-version.js     读取 Kimi Code 本地版本与 latest.json
@@ -158,7 +158,6 @@ node --test tests/**/*.test.js
 | `~/.kimi-code/session_index.jsonl` | 会话索引，每行一个 JSON |
 | `~/.kimi-code/sessions/wd_<项目名>_<hash>/session_<id>/state.json` | 会话目录与状态 |
 | `~/.kimi-code/session-manager-archive/` | 归档会话存放目录 |
-| `~/.kimi-code/ksm.lock` | 单实例锁文件，内容为进程 PID |
 | `~/.kimi-code/ksm-config.json` | ksm 配置（语言、是否显示额度） |
 | `~/.kimi/credentials/kimi-code.json` | Kimi Code 凭证（`access_token`） |
 
@@ -170,11 +169,10 @@ node --test tests/**/*.test.js
 
 `src/tui/index.js` 负责：
 
-1. 获取单实例锁。
-2. 加载配置并设置语言。
-3. 绘制欢迎界面。
-4. 若 Kimi Code 未安装，提示安装。
-5. 进入主菜单循环，分发到 `src/tui/menus.js` 各子菜单。
+1. 加载配置并设置语言。
+2. 绘制欢迎界面。
+3. 若 Kimi Code 未安装，提示安装。
+4. 进入主菜单循环，分发到 `src/tui/menus.js` 各子菜单。
 
 ### 7.4 启动 Kimi Code
 
@@ -199,8 +197,7 @@ node --test tests/**/*.test.js
 - **凭证以明文存储**：`~/.kimi/credentials/kimi-code.json` 中保存 `access_token`，无加密。
 - **远程脚本执行**：更新 Kimi Code 时会下载并立即执行远程 PowerShell 脚本。
 - **git pull 更新**：`updater.js` 直接拉取当前仓库 origin。
-- **单实例锁**: 基于 `~/.kimi-code/ksm.lock` 与 `process.kill(pid, 0)`，无法跨用户或强保证原子性。
-- 修改与安全相关的文件（凭证、锁、网络请求）时，应保持最小变更并保留降级行为。
+- 修改与安全相关的文件（凭证、网络请求）时，应保持最小变更并保留降级行为。
 
 ---
 

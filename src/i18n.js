@@ -132,8 +132,6 @@ const locales = {
     'install.failed': 'Kimi Code 安装失败：{message}',
     'install.manual': '请手动运行：irm https://code.kimi.com/kimi-code/install.ps1 | iex',
 
-    'error.alreadyRunning': 'Kimi Code Session Manager 已在运行中（PID: {pid}）',
-    'error.lockFailed': '无法获取单实例锁：{message}',
     'error.prefix': '错误：{message}',
   },
   en: {
@@ -256,8 +254,6 @@ const locales = {
     'install.failed': 'Kimi Code installation failed: {message}',
     'install.manual': 'Please run manually: irm https://code.kimi.com/kimi-code/install.ps1 | iex',
 
-    'error.alreadyRunning': 'Kimi Code Session Manager is already running (PID: {pid})',
-    'error.lockFailed': 'Unable to acquire instance lock: {message}',
     'error.prefix': 'Error: {message}',
   },
 };
