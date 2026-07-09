@@ -14,7 +14,7 @@ import {
   updateKimiCode,
 } from '../updater.js';
 import { getKimiCodeQuota } from '../quota.js';
-import { printWelcome, getKimiVersion } from './welcome.js';
+import { redrawWelcome } from './welcome.js';
 import { clearLastLine, formatTime, ROOT_DIR, QUIET_SELECT_THEME, hint } from './helpers.js';
 import {
   recentSessionsMenu,
@@ -22,6 +22,7 @@ import {
   languageMenu,
   messagesMenu,
   shortcutSettingsMenu,
+  createProjectMenu,
 } from './menus.js';
 
 /**
@@ -67,9 +68,8 @@ export async function startTui(options = {}) {
     const config = loadKsmConfig(env);
     if (config.locale) setLocale(config.locale);
 
-    const kimiVersion = await getKimiVersion(env);
     const quotaState = await refreshQuotaState(config.showQuota);
-    printWelcome(kimiVersion, [], quotaState.text, quotaState.show);
+    await redrawWelcome(env, [], { quotaText: quotaState.text, showQuota: quotaState.show });
 
     // 并行检查 Kimi Code 与 ksm 更新，不阻塞菜单首次渲染
     const versionPromise = Promise.all([
@@ -175,8 +175,7 @@ async function mainMenu(env, options = {}) {
   });
 
   while (true) {
-    const kimiVersion = await getKimiVersion(env);
-    printWelcome(kimiVersion, messages, quotaText, showQuota);
+    await redrawWelcome(env, messages, menuOptions());
 
     const prompt = select({
       message: t('mainMenu.title'),
@@ -184,6 +183,7 @@ async function mainMenu(env, options = {}) {
       instructions: hint('select'),
       choices: [
         { name: t('mainMenu.recent'), value: 'recent' },
+        { name: t('mainMenu.createProject'), value: 'create-project' },
         { name: t('mainMenu.update'), value: 'update' },
         { name: t('mainMenu.language'), value: 'language' },
         { name: t('mainMenu.messages'), value: 'messages' },
@@ -221,6 +221,9 @@ async function mainMenu(env, options = {}) {
       case 'recent':
         await recentSessionsMenu(env, messages, menuOptions());
         break;
+      case 'create-project':
+        await createProjectMenu(env, messages, menuOptions());
+        break;
       case 'update':
         await updateMenu(env, messages, menuOptions());
         break;
@@ -228,7 +231,7 @@ async function mainMenu(env, options = {}) {
         await languageMenu(env, messages, menuOptions());
         break;
       case 'messages':
-        await messagesMenu(messages);
+        await messagesMenu(env, messages, menuOptions());
         break;
       case 'settings':
         await shortcutSettingsMenu(env, messages, menuOptions());

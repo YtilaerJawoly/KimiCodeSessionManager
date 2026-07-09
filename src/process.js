@@ -71,6 +71,29 @@ export function spawnDetached(cmd, args, options = {}, spawner = spawn) {
   });
 }
 
+/**
+ * 在当前平台用文件资源管理器打开指定目录。
+ * 失败时返回错误信息，不抛出异常，避免影响主流程。
+ *
+ * @param {string} dirPath 要打开的目录路径
+ * @param {Function} [spawner=spawn] 用于测试注入的子进程启动函数
+ * @returns {Promise<{success: boolean, message?: string}>}
+ */
+export async function openFileExplorer(dirPath, spawner = spawn) {
+  const commands = {
+    win32: ['explorer', [dirPath]],
+    darwin: ['open', [dirPath]],
+    linux: ['xdg-open', [dirPath]],
+  };
+  const [cmd, args] = commands[platform()] || commands.linux;
+  try {
+    await spawnDetached(cmd, args, { detached: true, stdio: 'ignore' }, spawner);
+    return { success: true };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+}
+
 function runWithStdio(cmd, args, options, spawner) {
   return new Promise((resolve) => {
     const child = spawner(cmd, args, options);

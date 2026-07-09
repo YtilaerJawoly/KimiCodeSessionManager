@@ -1,6 +1,9 @@
-import { describe, it } from 'node:test';
+import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildProjects, getLatestSession, findSessionById, findProjectByPath } from '../src/store.js';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { buildProjects, buildWorktreeGroups, getLatestSession, findSessionById, findProjectByPath } from '../src/store.js';
 
 const sessions = [
   { id: 'session_s2', projectPath: '/e/a', projectName: 'a', updatedAt: '2026-07-02T00:00:00.000Z' },
@@ -98,5 +101,67 @@ describe('findProjectByPath', () => {
   it('returns null for unknown path', () => {
     const projects = buildProjects(sessions);
     assert.equal(findProjectByPath(projects, '/e/c'), null);
+  });
+});
+
+describe('buildWorktreeGroups', () => {
+  let base;
+
+  beforeEach(() => {
+    base = mkdtempSync(join(tmpdir(), 'ksm-wt-'));
+  });
+
+  afterEach(() => rmSync(base, { recursive: true, force: true }));
+
+  it('groups main and linked worktrees by real git metadata', () => {
+    const mainPath = join(base, 'repo');
+    const wtPath = join(base, 'repo-feature');
+    mkdirSync(join(mainPath, '.git'), { recursive: true });
+    mkdirSync(wtPath, { recursive: true });
+    writeFileSync(join(wtPath, '.git'), `gitdir: ${join(mainPath, '.git', 'worktrees', 'feature')}\n`);
+
+    const sessions = [
+      { id: 's1', projectPath: mainPath, projectName: 'repo', updatedAt: '2026-07-10T00:00:00.000Z' },
+      { id: 's2', projectPath: wtPath, projectName: 'repo-feature', updatedAt: '2026-07-09T00:00:00.000Z' },
+    ];
+    const groups = buildWorktreeGroups(buildProjects(sessions));
+
+    assert.equal(groups.length, 1);
+    assert.equal(groups[0].name, 'repo');
+    assert.equal(groups[0].sessionCount, 2);
+    assert.equal(groups[0].worktrees.length, 2);
+    assert.equal(groups[0].worktrees[0].isMain, true);
+    assert.equal(groups[0].worktrees[1].isMain, false);
+  });
+
+  it('keeps non-git projects as standalone groups', () => {
+    const otherPath = join(base, 'other');
+    mkdirSync(otherPath, { recursive: true });
+
+    const sessions = [
+      { id: 's1', projectPath: otherPath, projectName: 'other', updatedAt: '2026-07-10T00:00:00.000Z' },
+    ];
+    const groups = buildWorktreeGroups(buildProjects(sessions));
+
+    assert.equal(groups.length, 1);
+    assert.equal(groups[0].name, 'other');
+    assert.equal(groups[0].worktrees.length, 1);
+    assert.equal(groups[0].worktrees[0].isMain, true);
+  });
+
+  it('sorts groups by lastUpdated descending', () => {
+    const p1 = join(base, 'p1');
+    const p2 = join(base, 'p2');
+    mkdirSync(p1, { recursive: true });
+    mkdirSync(p2, { recursive: true });
+
+    const sessions = [
+      { id: 'older', projectPath: p1, projectName: 'p1', updatedAt: '2026-07-08T00:00:00.000Z' },
+      { id: 'newer', projectPath: p2, projectName: 'p2', updatedAt: '2026-07-10T00:00:00.000Z' },
+    ];
+    const groups = buildWorktreeGroups(buildProjects(sessions));
+
+    assert.equal(groups[0].name, 'p2');
+    assert.equal(groups[1].name, 'p1');
   });
 });

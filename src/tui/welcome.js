@@ -80,3 +80,18 @@ export function printWelcome(kimiVersion, messages = [], quota = '', showQuota =
   }
   console.log();
 }
+
+/**
+ * 异步读取 Kimi Code 版本并重新绘制欢迎横幅。
+ * 供各菜单页统一在循环开头调用。
+ *
+ * @param {Object} env 环境变量对象
+ * @param {Array<{level?: string, text: string}>} messages 顶部通知消息
+ * @param {Object} [options]
+ * @param {string} [options.quotaText]
+ * @param {boolean} [options.showQuota]
+ */
+export async function redrawWelcome(env, messages = [], options = {}) {
+  const kimiVersion = await getKimiVersion(env);
+  printWelcome(kimiVersion, messages, options.quotaText || '', options.showQuota || false);
+}
