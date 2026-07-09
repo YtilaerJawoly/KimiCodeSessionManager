@@ -23,6 +23,7 @@ import {
   messagesMenu,
   shortcutSettingsMenu,
   createProjectMenu,
+  quickStartMenu,
 } from './menus.js';
 
 /**
@@ -182,6 +183,7 @@ async function mainMenu(env, options = {}) {
       theme: QUIET_SELECT_THEME,
       instructions: hint('select'),
       choices: [
+        { name: t('mainMenu.quickStart'), value: 'quick-start' },
         { name: t('mainMenu.recent'), value: 'recent' },
         { name: t('mainMenu.createProject'), value: 'create-project' },
         { name: t('mainMenu.update'), value: 'update' },
@@ -218,6 +220,9 @@ async function mainMenu(env, options = {}) {
     }
 
     switch (action) {
+      case 'quick-start':
+        await quickStartMenu(env, messages, menuOptions());
+        break;
       case 'recent':
         await recentSessionsMenu(env, messages, menuOptions());
         break;

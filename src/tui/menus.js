@@ -41,6 +41,50 @@ import {
  */
 
 /**
+ * 快速开始菜单：列出最近 5 个会话，选择后直接继续。
+ */
+export async function quickStartMenu(env, messages = [], options = {}) {
+  while (true) {
+    await redrawWelcome(env, messages, options);
+
+    const sessions = await loadSessions(env);
+    const recent = sessions.slice(0, 5);
+
+    if (recent.length === 0) {
+      console.log(chalk.yellow(t('quickStartMenu.empty')));
+      return;
+    }
+
+    const choices = [
+      { name: t('quickStartMenu.back'), value: 'back' },
+      ...recent.map(s => ({
+        name: `${padEnd(truncate(s.projectName, 18), NAME_WIDTH)}${truncate(s.title, 40)}  ${chalk.gray(formatTime(s.updatedAt))}`,
+        value: s,
+        description: (s.lastPrompt || '').slice(0, 80),
+      })),
+    ];
+
+    const session = await promptWithCancel(() => select({
+      message: t('quickStartMenu.title'),
+      theme: QUIET_SELECT_THEME,
+      default: recent[0].id,
+      instructions: hint('select'),
+      choices,
+    }));
+
+    if (session === 'back') return;
+    if (!session) continue;
+
+    try {
+      await continueSession(session);
+      return;
+    } catch (err) {
+      console.error(chalk.red(t('projectMenu.launchFailed', { message: err.message })));
+    }
+  }
+}
+
+/**
  * 新建项目菜单。
  */
 export async function createProjectMenu(env, messages = [], options = {}) {

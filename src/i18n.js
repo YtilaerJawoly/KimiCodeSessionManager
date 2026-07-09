@@ -19,6 +19,7 @@ const locales = {
     'welcome.quotaUnavailable': 'Plan: --',
 
     'mainMenu.title': '主菜单：',
+    'mainMenu.quickStart': '快速开始',
     'mainMenu.recent': '继续最近会话',
     'mainMenu.update': '更新',
     'mainMenu.language': '语言',
@@ -28,6 +29,10 @@ const locales = {
     'mainMenu.exit': '退出',
     'mainMenu.kimiCodeUpdate': 'Kimi Code 有新版本可用: {version}',
     'mainMenu.ksmUpdate': 'ksm 有新版本可用: {version}',
+
+    'quickStartMenu.title': '快速开始 — 选择一个最近的会话：',
+    'quickStartMenu.back': '返回上一级',
+    'quickStartMenu.empty': '暂无最近会话',
 
     'createProjectMenu.title': '新建项目 — 输入项目名称：',
     'createProjectMenu.preview': '将在 {path} 创建以下文件：',
@@ -138,6 +143,7 @@ const locales = {
     'welcome.quotaUnavailable': 'Plan: --',
 
     'mainMenu.title': 'Main Menu:',
+    'mainMenu.quickStart': 'Quick Start',
     'mainMenu.recent': 'Continue Recent Session',
     'mainMenu.update': 'Update',
     'mainMenu.language': 'Language',
@@ -147,6 +153,10 @@ const locales = {
     'mainMenu.exit': 'Exit',
     'mainMenu.kimiCodeUpdate': 'Kimi Code update available: {version}',
     'mainMenu.ksmUpdate': 'ksm update available: {version}',
+
+    'quickStartMenu.title': 'Quick Start — Select a recent session:',
+    'quickStartMenu.back': 'Back',
+    'quickStartMenu.empty': 'No recent sessions',
 
     'createProjectMenu.title': 'Create New Project — Enter project name:',
     'createProjectMenu.preview': 'Will create the following files in {path}:',
