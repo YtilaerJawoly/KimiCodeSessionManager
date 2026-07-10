@@ -1,5 +1,5 @@
 import { homedir } from 'node:os';
-import { join, resolve, dirname } from 'node:path';
+import { join, resolve } from 'node:path';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 
 /**
@@ -35,41 +35,6 @@ export function getPaths(env = process.env) {
     archiveDir: join(home, 'session-manager-archive'),
     configFile: join(home, 'ksm-config.json'),
   };
-}
-
-/**
- * 获取 Kimi Code 凭证文件路径（~/.kimi/credentials/kimi-code.json）。
- */
-export function getKimiCredentialPath() {
-  return resolve(homedir(), '.kimi', 'credentials', 'kimi-code.json');
-}
-
-/**
- * 读取 Kimi Code 凭证中的 access_token。
- * 文件不存在或读取失败时返回空字符串。
- */
-export function loadKimiAccessToken() {
-  const path = getKimiCredentialPath();
-  try {
-    if (!existsSync(path)) return '';
-    const cred = JSON.parse(readFileSync(path, 'utf8'));
-    return cred.access_token || cred.token || '';
-  } catch {
-    return '';
-  }
-}
-
-/**
- * 保存 Kimi Code 凭证文件，只写入 access_token。
- */
-export function saveKimiAccessToken(token) {
-  const path = getKimiCredentialPath();
-  try {
-    ensureDir(dirname(path));
-    writeFileSync(path, JSON.stringify({ access_token: token }, null, 2), 'utf8');
-  } catch {
-    // ignore write failures
-  }
 }
 
 /**

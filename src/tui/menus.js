@@ -243,13 +243,8 @@ export async function languageMenu(env, messages = [], options = {}) {
  * 快捷设置菜单。
  */
 export async function shortcutSettingsMenu(env, messages = [], options = {}) {
-  const { showQuota, setShowQuota, refreshQuota, quotaText } = options;
   while (true) {
     await redrawWelcome(env, messages, options);
-
-    const quotaToggleLabel = showQuota
-      ? t('settingsMenu.quotaToggle', { state: t('settingsMenu.quotaOn') })
-      : t('settingsMenu.quotaToggle', { state: t('settingsMenu.quotaOff') });
 
     const action = await promptWithCancel(() => select({
       message: t('settingsMenu.title'),
@@ -259,8 +254,6 @@ export async function shortcutSettingsMenu(env, messages = [], options = {}) {
       choices: [
         { name: t('settingsMenu.back'), value: 'back' },
         { name: t('settingsMenu.desktop'), value: 'desktop' },
-        { name: quotaToggleLabel, value: 'quota-toggle' },
-        { name: t('settingsMenu.quotaSetToken'), value: 'quota-token' },
       ],
     }));
 
@@ -271,31 +264,6 @@ export async function shortcutSettingsMenu(env, messages = [], options = {}) {
           console.log(chalk.green(t('settingsMenu.desktopSuccess', { message: result.message })));
         } else {
           console.error(chalk.red(t('settingsMenu.desktopFailed', { message: result.message })));
-        }
-        break;
-      }
-      case 'quota-toggle': {
-        setShowQuota(!showQuota);
-        break;
-      }
-      case 'quota-token': {
-        const { input } = await import('@inquirer/prompts');
-        const { loadKimiAccessToken, saveKimiAccessToken } = await import('../config.js');
-        const token = await promptWithCancel(() => input({
-          message: t('settingsMenu.quotaSetToken'),
-          theme: QUIET_SELECT_THEME,
-          default: loadKimiAccessToken(),
-        }), '');
-        if (typeof token === 'string') {
-          if (token.trim()) {
-            saveKimiAccessToken(token.trim());
-            await refreshQuota();
-            console.log(chalk.green(t('settingsMenu.quotaTokenSaved')));
-          } else {
-            saveKimiAccessToken('');
-            await refreshQuota();
-            console.log(chalk.yellow(t('settingsMenu.quotaTokenCleared')));
-          }
         }
         break;
       }

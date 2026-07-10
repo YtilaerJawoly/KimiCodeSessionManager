@@ -56,7 +56,6 @@
 │   ├── kimi-version.js     读取 Kimi Code 本地版本与 latest.json
 │   ├── loader.js           从索引/目录加载 Kimi 会话
 │   ├── process.js          子进程执行原语（runCommand/runPowerShell/…）
-│   ├── quota.js            查询 Kimi Code Plan 额度
 │   ├── shortcut.js         创建 Windows 桌面快捷方式
 │   ├── store.js            会话按项目分组、排序与查询
 │   ├── updater.js          更新 Kimi Code 与 ksm
@@ -69,7 +68,6 @@
 ├── tests/                  单元测试，每个 `src/*.js` 对应一个 `tests/*.test.js`
 ├── scripts/
 │   ├── start.cs            start.exe 的 C# 源码
-│   └── Get-KimiQuota.ps1   独立的 Kimi 额度查询脚本
 ├── docs/superpowers/       面向智能体开发的计划/设计文档（非源码）
 ├── start.ps1               Windows PowerShell 启动脚本（GBK 编码 + CRLF）
 ├── start.sh                Unix shell 启动脚本
@@ -120,7 +118,7 @@ node --test tests/**/*.test.js
 - **模块**: 使用 ESM `import/export`，内置模块统一加 `node:` 前缀（如 `node:fs`、`node:path`）。
 - **注释**: 每个模块顶部有中文职责说明；关键导出函数带 JSDoc。
 - **错误处理**:
-  - 配置、凭证、额度查询等 I/O 失败时**静默降级**，避免 TUI 崩溃。
+  - 配置、网络请求等 I/O 失败时**静默降级**，避免 TUI 崩溃。
   - 业务错误（如归档不存在的目录）应抛出明确错误，由 TUI 层显示。
 - **依赖注入**: 所有启动子进程的函数接受可选的 `spawner` 参数，便于单元测试 mock。
 - **纯函数优先**: 数据转换逻辑（`store.js`、`version.js`）不含 I/O，方便测试。
@@ -158,8 +156,7 @@ node --test tests/**/*.test.js
 | `~/.kimi-code/session_index.jsonl` | 会话索引，每行一个 JSON |
 | `~/.kimi-code/sessions/wd_<项目名>_<hash>/session_<id>/state.json` | 会话目录与状态 |
 | `~/.kimi-code/session-manager-archive/` | 归档会话存放目录 |
-| `~/.kimi-code/ksm-config.json` | ksm 配置（语言、是否显示额度） |
-| `~/.kimi/credentials/kimi-code.json` | Kimi Code 凭证（`access_token`） |
+| `~/.kimi-code/ksm-config.json` | ksm 配置（语言） |
 
 ### 7.2 会话加载流程
 
@@ -194,10 +191,9 @@ node --test tests/**/*.test.js
 
 ## 8. 安全注意事项
 
-- **凭证以明文存储**：`~/.kimi/credentials/kimi-code.json` 中保存 `access_token`，无加密。
 - **远程脚本执行**：更新 Kimi Code 时会下载并立即执行远程 PowerShell 脚本。
 - **git pull 更新**：`updater.js` 直接拉取当前仓库 origin。
-- 修改与安全相关的文件（凭证、网络请求）时，应保持最小变更并保留降级行为。
+- 修改与安全相关的文件（网络请求）时，应保持最小变更并保留降级行为。
 
 ---
 

@@ -15,8 +15,6 @@ const locales = {
   'zh-CN': {
     'welcome.title': 'Kimi Code Session Manager {version}',
     'welcome.subtitle': 'Kimi Code: {version}',
-    'welcome.quota': 'Plan: {remaining}',
-    'welcome.quotaUnavailable': 'Plan: --',
 
     'mainMenu.title': '主菜单：',
     'mainMenu.quickStart': '快速开始',
@@ -70,12 +68,6 @@ const locales = {
     'settingsMenu.desktop': '在桌面添加 start.exe 快捷方式',
     'settingsMenu.desktopSuccess': '已创建桌面快捷方式：{message}',
     'settingsMenu.desktopFailed': '创建失败：{message}',
-    'settingsMenu.quotaToggle': '{state} 显示 Kimi Code Plan 额度',
-    'settingsMenu.quotaOn': '关闭',
-    'settingsMenu.quotaOff': '开启',
-    'settingsMenu.quotaSetToken': '设置 Access Token',
-    'settingsMenu.quotaTokenSaved': 'Access Token 已保存。',
-    'settingsMenu.quotaTokenCleared': 'Access Token 已清除。',
 
     'recentMenu.title': '搜索并选择一个项目继续：',
     'recentMenu.noProjects': '未找到任何 Kimi 会话。',
@@ -137,8 +129,6 @@ const locales = {
   en: {
     'welcome.title': 'Kimi Code Session Manager {version}',
     'welcome.subtitle': 'Kimi Code: {version}',
-    'welcome.quota': 'Plan: {remaining}',
-    'welcome.quotaUnavailable': 'Plan: --',
 
     'mainMenu.title': 'Main Menu:',
     'mainMenu.quickStart': 'Quick Start',
@@ -192,12 +182,6 @@ const locales = {
     'settingsMenu.desktop': 'Create desktop shortcut for start.exe',
     'settingsMenu.desktopSuccess': 'Desktop shortcut created: {message}',
     'settingsMenu.desktopFailed': 'Failed to create shortcut: {message}',
-    'settingsMenu.quotaToggle': '{state} Show Kimi Code Plan quota',
-    'settingsMenu.quotaOn': 'Hide',
-    'settingsMenu.quotaOff': 'Show',
-    'settingsMenu.quotaSetToken': 'Set Access Token',
-    'settingsMenu.quotaTokenSaved': 'Access Token saved.',
-    'settingsMenu.quotaTokenCleared': 'Access Token cleared.',
 
     'recentMenu.title': 'Search and select a project to continue:',
     'recentMenu.noProjects': 'No Kimi sessions found.',

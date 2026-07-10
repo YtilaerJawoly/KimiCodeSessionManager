@@ -43,10 +43,8 @@ export async function getKimiVersion(env = process.env) {
  *
  * @param {string} kimiVersion Kimi Code 版本号
  * @param {Array<{level?: string, text: string}>} messages 顶部通知消息
- * @param {string} [quota] 可选的 Kimi Code Plan 剩余额度
- * @param {boolean} [showQuota] 是否显示额度
  */
-export function printWelcome(kimiVersion, messages = [], quota = '', showQuota = false) {
+export function printWelcome(kimiVersion, messages = []) {
   // 清屏并把光标移到左上角，保证每次进入菜单都是“重绘”而非追加
   process.stdout.write('\x1B[2J\x1B[H');
 
@@ -71,13 +69,6 @@ export function printWelcome(kimiVersion, messages = [], quota = '', showQuota =
   console.log(accent(line(LOGO_PREFIX, title)));
   console.log(accent(line(LINE_PREFIX, truncate(t('welcome.subtitle', { version: kimiVersion || 'unknown' }), maxTextWidth))));
 
-  if (showQuota) {
-    const quotaText = quota
-      ? t('welcome.quota', { remaining: quota })
-      : t('welcome.quotaUnavailable');
-    console.log(accent(line(LINE_PREFIX, truncate(quotaText, maxTextWidth))));
-  }
-
   console.log(accent('│' + ' '.repeat(width) + '│'));
   console.log(accent(bottom));
 
@@ -93,11 +84,8 @@ export function printWelcome(kimiVersion, messages = [], quota = '', showQuota =
  *
  * @param {Object} env 环境变量对象
  * @param {Array<{level?: string, text: string}>} messages 顶部通知消息
- * @param {Object} [options]
- * @param {string} [options.quotaText]
- * @param {boolean} [options.showQuota]
  */
-export async function redrawWelcome(env, messages = [], options = {}) {
+export async function redrawWelcome(env, messages = []) {
   const kimiVersion = await getKimiVersion(env);
-  printWelcome(kimiVersion, messages, options.quotaText || '', options.showQuota || false);
+  printWelcome(kimiVersion, messages);
 }
