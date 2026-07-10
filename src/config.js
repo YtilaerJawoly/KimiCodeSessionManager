@@ -1,19 +1,17 @@
 import { homedir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 
 /**
- * 配置与单实例锁模块
+ * 配置模块
  *
  * 职责：
  *   1. 解析 Kimi home 目录路径（支持 KIMI_HOME 环境变量覆盖）。
  *   2. 提供 ksm 配置文件的读写接口。
- *   3. 通过锁文件实现 ksm 单实例运行，防止多开。
  *
  * 设计原则：
  *   - 所有与文件路径相关的常量集中管理，避免在业务模块中硬编码。
  *   - 配置文件读写失败时静默降级，保证 TUI 仍可启动。
- *   - 单实例锁通过检测锁文件中的 PID 是否仍然存活来判断是否被占用。
  */
 
 /**
@@ -35,7 +33,6 @@ export function getPaths(env = process.env) {
     indexFile: join(home, 'session_index.jsonl'),
     sessionsDir: join(home, 'sessions'),
     archiveDir: join(home, 'session-manager-archive'),
-    lockFile: join(home, 'ksm.lock'),
     configFile: join(home, 'ksm-config.json'),
   };
 }
@@ -102,63 +99,6 @@ export function saveKsmConfig(config, env = process.env) {
   } catch {
     // ignore write failures
   }
-}
-
-/**
- * 获取单实例锁。
- *
- * 行为：
- *   - 如果锁文件不存在，或锁文件中的 PID 已不存在，则成功获取锁。
- *   - 如果锁文件中的 PID 仍然存活，则返回该 PID，表示 ksm 已在运行。
- *   - 获取锁后注册进程退出钩子，确保锁文件能被清理。
- */
-export function acquireInstanceLock(env = process.env) {
-  const { lockFile, home } = getPaths(env);
-
-  // 检查现有锁是否被存活进程持有
-  try {
-    const text = readFileSync(lockFile, 'utf8').trim();
-    const pid = parseInt(text, 10);
-    if (pid && pid !== process.pid) {
-      try {
-        process.kill(pid, 0);
-        return { acquired: false, pid };
-      } catch {
-        // stale lock, the process is dead
-      }
-    }
-  } catch {
-    // no lock file yet
-  }
-
-  try {
-    ensureDir(home);
-    writeFileSync(lockFile, String(process.pid), 'utf8');
-
-    const release = () => {
-      try {
-        unlinkSync(lockFile);
-      } catch {}
-    };
-
-    process.on('exit', release);
-    process.on('SIGINT', () => { release(); process.exit(); });
-    process.on('SIGTERM', () => { release(); process.exit(); });
-
-    return { acquired: true };
-  } catch (err) {
-    return { acquired: false, error: err.message };
-  }
-}
-
-/**
- * 手动释放单实例锁。
- */
-export function releaseInstanceLock(env = process.env) {
-  const { lockFile } = getPaths(env);
-  try {
-    unlinkSync(lockFile);
-  } catch {}
 }
 
 /**

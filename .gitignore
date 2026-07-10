@@ -4,3 +4,4 @@ node_modules/
 .worktrees/
 .understand-anything/
 *.tmp
+workspace/

@@ -91,10 +91,13 @@ export function clearLastLine() {
 /**
  * 包装 inquirer 提示函数，捕获用户取消（ESC）并返回指定的取消值。
  * 用于统一子菜单中按 ESC 的行为：返回上级而不是退出程序。
+ * 提示成功返回前会清除答案残留行，保持菜单边界整洁。
  */
 export async function promptWithCancel(promptFn, cancelValue = 'back') {
   try {
-    return await promptFn();
+    const result = await promptFn();
+    clearLastLine();
+    return result;
   } catch (err) {
     if (err?.message && /cancelled|prompt was canceled/i.test(err.message)) {
       return cancelValue;

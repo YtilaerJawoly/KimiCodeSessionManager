@@ -13,7 +13,6 @@ Repository: https://github.com/YtilaerJawoly/KimiCodeSessionManager
 - **Browse and search history**: View all historical sessions within a project, with fuzzy search by project name or path.
 - **Create new sessions**: Quickly start a new Kimi Code session for a selected project.
 - **Bulk cleanup and archiving**: Select multiple old sessions and delete them to free space, or archive them to `~/.kimi-code/session-manager-archive`.
-- **Single-instance guard**: Uses `~/.kimi-code/ksm.lock` to prevent multiple ksm instances from running at the same time.
 - **Chinese / English UI**: A “Language” option in the main menu takes effect immediately and persists to config.
 - **Update checks**: Integrated update entry in the main menu for updating ksm or Kimi Code.
 - **Quick settings**: One-click creation of a desktop shortcut for `start.exe`.

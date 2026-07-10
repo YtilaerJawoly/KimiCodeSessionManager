@@ -6,6 +6,7 @@ import {
   runPowerShell,
   runCommandWithTimeout,
   spawnDetached,
+  openFileExplorer,
 } from '../src/process.js';
 
 describe('process', () => {
@@ -97,6 +98,50 @@ describe('process', () => {
       return child;
     };
     await assert.rejects(() => spawnDetached('cmd', ['arg'], {}, spawn), /boom/);
+  });
+
+  it('openFileExplorer uses explorer on Windows, open on macOS, xdg-open on Linux', async () => {
+    const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+    let captured;
+    const spawn = (cmd, args, options) => {
+      captured = { cmd, args, options };
+      const child = new EventEmitter();
+      process.nextTick(() => child.emit('spawn'));
+      return child;
+    };
+
+    try {
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      const winResult = await openFileExplorer('E:/foo', spawn);
+      assert.equal(winResult.success, true);
+      assert.equal(captured.cmd, 'explorer');
+      assert.deepEqual(captured.args, ['E:/foo']);
+
+      Object.defineProperty(process, 'platform', { value: 'darwin' });
+      const macResult = await openFileExplorer('/foo', spawn);
+      assert.equal(macResult.success, true);
+      assert.equal(captured.cmd, 'open');
+      assert.deepEqual(captured.args, ['/foo']);
+
+      Object.defineProperty(process, 'platform', { value: 'linux' });
+      const linuxResult = await openFileExplorer('/foo', spawn);
+      assert.equal(linuxResult.success, true);
+      assert.equal(captured.cmd, 'xdg-open');
+      assert.deepEqual(captured.args, ['/foo']);
+    } finally {
+      Object.defineProperty(process, 'platform', originalPlatform);
+    }
+  });
+
+  it('openFileExplorer returns failure on spawn error', async () => {
+    const spawn = () => {
+      const child = new EventEmitter();
+      process.nextTick(() => child.emit('error', new Error('spawn err')));
+      return child;
+    };
+    const result = await openFileExplorer('/foo', spawn);
+    assert.equal(result.success, false);
+    assert.equal(result.message, 'spawn err');
   });
 });
 

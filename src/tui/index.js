@@ -2,8 +2,6 @@ import process from 'node:process';
 import { select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import {
-  acquireInstanceLock,
-  releaseInstanceLock,
   loadKsmConfig,
   saveKsmConfig,
 } from '../config.js';
@@ -14,7 +12,7 @@ import {
   updateKimiCode,
 } from '../updater.js';
 import { getKimiCodeQuota } from '../quota.js';
-import { printWelcome, getKimiVersion } from './welcome.js';
+import { redrawWelcome } from './welcome.js';
 import { clearLastLine, formatTime, ROOT_DIR, QUIET_SELECT_THEME, hint } from './helpers.js';
 import {
   recentSessionsMenu,
@@ -22,13 +20,15 @@ import {
   languageMenu,
   messagesMenu,
   shortcutSettingsMenu,
+  createProjectMenu,
+  quickStartMenu,
 } from './menus.js';
 
 /**
  * TUI 入口与主菜单模块
  *
  * 职责：
- *   1. 启动时获取单实例锁、加载用户配置、设置语言。
+ *   1. 加载用户配置、设置语言。
  *   2. 绘制欢迎界面并检查 Kimi Code 安装状态。
  *   3. 进入主循环，根据用户选择分发到各子菜单。
  *
@@ -46,30 +46,16 @@ import {
  */
 export async function startTui(options = {}) {
   let env;
-  let lockAcquired = false;
 
   try {
     env = options.home ? { ...process.env, KIMI_HOME: options.home } : process.env;
-
-    // 单实例锁：防止同时运行多个 ksm 进程造成竞态
-    const lock = acquireInstanceLock(env);
-    if (!lock.acquired) {
-      const message = lock.pid
-        ? t('error.alreadyRunning', { pid: lock.pid })
-        : t('error.lockFailed', { message: lock.error || '' });
-      console.error(chalk.red(message));
-      process.exitCode = 1;
-      return;
-    }
-    lockAcquired = true;
 
     // 加载持久化配置（语言、额度显示开关）
     const config = loadKsmConfig(env);
     if (config.locale) setLocale(config.locale);
 
-    const kimiVersion = await getKimiVersion(env);
     const quotaState = await refreshQuotaState(config.showQuota);
-    printWelcome(kimiVersion, [], quotaState.text, quotaState.show);
+    await redrawWelcome(env, [], { quotaText: quotaState.text, showQuota: quotaState.show });
 
     // 并行检查 Kimi Code 与 ksm 更新，不阻塞菜单首次渲染
     const versionPromise = Promise.all([
@@ -109,10 +95,6 @@ export async function startTui(options = {}) {
     }
     console.error(chalk.red(t('error.prefix', { message: err?.message || err })));
     process.exit(1);
-  } finally {
-    if (lockAcquired && env) {
-      releaseInstanceLock(env);
-    }
   }
 }
 
@@ -175,15 +157,16 @@ async function mainMenu(env, options = {}) {
   });
 
   while (true) {
-    const kimiVersion = await getKimiVersion(env);
-    printWelcome(kimiVersion, messages, quotaText, showQuota);
+    await redrawWelcome(env, messages, menuOptions());
 
     const prompt = select({
       message: t('mainMenu.title'),
       theme: QUIET_SELECT_THEME,
       instructions: hint('select'),
       choices: [
+        { name: t('mainMenu.quickStart'), value: 'quick-start' },
         { name: t('mainMenu.recent'), value: 'recent' },
+        { name: t('mainMenu.createProject'), value: 'create-project' },
         { name: t('mainMenu.update'), value: 'update' },
         { name: t('mainMenu.language'), value: 'language' },
         { name: t('mainMenu.messages'), value: 'messages' },
@@ -218,8 +201,14 @@ async function mainMenu(env, options = {}) {
     }
 
     switch (action) {
+      case 'quick-start':
+        await quickStartMenu(env, messages, menuOptions());
+        break;
       case 'recent':
         await recentSessionsMenu(env, messages, menuOptions());
+        break;
+      case 'create-project':
+        await createProjectMenu(env, messages, menuOptions());
         break;
       case 'update':
         await updateMenu(env, messages, menuOptions());
@@ -228,7 +217,7 @@ async function mainMenu(env, options = {}) {
         await languageMenu(env, messages, menuOptions());
         break;
       case 'messages':
-        await messagesMenu(messages);
+        await messagesMenu(env, messages, menuOptions());
         break;
       case 'settings':
         await shortcutSettingsMenu(env, messages, menuOptions());

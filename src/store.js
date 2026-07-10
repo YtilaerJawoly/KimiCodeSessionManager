@@ -11,6 +11,8 @@
  *   - 无效时间统一视为最早，保证有效会话始终排在前面。
  */
 
+import { groupProjectsByWorktree } from './worktree.js';
+
 /**
  * 安全解析 ISO 时间为时间戳，无效时返回 -Infinity。
  */
@@ -66,6 +68,23 @@ export function buildProjects(sessions) {
   }
 
   return projects.sort((a, b) =>
+    compareDate(a.lastUpdated, b.lastUpdated, a.path, b.path)
+  );
+}
+
+/**
+ * 将 Project 数组按 git worktree 关系分组。
+ *
+ * 每个 ProjectGroup 包含：
+ *   - name/path: main worktree 的项目名/路径
+ *   - worktrees: 按 lastUpdated 降序排列的 WorktreeItem 数组
+ *   - lastUpdated: 组内最新会话时间
+ *   - sessionCount: 组内会话总数
+ *
+ * 返回的 ProjectGroup 数组按 lastUpdated 降序排列。
+ */
+export function buildWorktreeGroups(projects) {
+  return groupProjectsByWorktree(projects).sort((a, b) =>
     compareDate(a.lastUpdated, b.lastUpdated, a.path, b.path)
   );
 }
