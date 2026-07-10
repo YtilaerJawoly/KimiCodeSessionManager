@@ -100,8 +100,12 @@ function readCurrentKsmVersion() {
  * 如果 3 秒内未完成，自动放弃，避免阻塞菜单。
  */
 async function getRemoteKsmVersion(cwd, spawner) {
+  // 强制使用 HTTP/1.1，避免 Windows 下 Git 在 Node 子进程中因 HTTP/2 连接保持而挂起。
   const result = await runCommandWithTimeout(
-    'git', ['ls-remote', '--tags', 'origin'], { cwd }, 3000, spawner
+    'git', ['ls-remote', '--tags', 'origin'],
+    { cwd, env: { ...process.env, GIT_HTTP_VERSION: 'HTTP/1.1' } },
+    3000,
+    spawner
   );
   if (!result.success) return '';
 
