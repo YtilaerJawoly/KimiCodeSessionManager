@@ -9,6 +9,7 @@
     "bin/",
     "src/",
     "scripts/",
+    "start.exe",
     "start.ps1",
     "start.sh",
     "README.md",
@@ -29,7 +30,9 @@
   },
   "scripts": {
     "start": "node bin/ksm.js",
-    "test": "node --test tests/**/*.test.js"
+    "test": "node --test tests/**/*.test.js",
+    "build:win": "node scripts/build-start.js",
+    "prepare": "node scripts/build-start.js"
   },
   "repository": {
     "type": "git",
