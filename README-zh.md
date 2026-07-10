@@ -5,12 +5,6 @@
 ## 安装
 
 ```bash
-npm install -g kimi-session-manager
-```
-
-或手动克隆安装：
-
-```bash
 git clone https://github.com/YtilaerJawoly/KimiCodeSessionManager.git
 cd KimiCodeSessionManager
 npm install -g .
