@@ -71,8 +71,21 @@ export const PATH_WIDTH = 42;
 /** Fuse.js 搜索配置：按名称和路径模糊匹配 */
 export const FUSE_OPTIONS = { keys: ['name', 'path'], threshold: 0.4 };
 
-/** 欢迎界面（顶部横幅）总宽度 */
+/** 欢迎界面（顶部横幅）默认/最大宽度 */
 export const WELCOME_WIDTH = 80;
+
+/** 欢迎界面最小宽度，避免过窄终端内容被压碎 */
+export const MIN_WELCOME_WIDTH = 40;
+
+/**
+ * 根据终端实际列数计算欢迎界面宽度。
+ * @returns {number}
+ */
+export function getWelcomeWidth() {
+  const columns = process.stdout.columns;
+  if (!columns || typeof columns !== 'number') return WELCOME_WIDTH;
+  return Math.max(MIN_WELCOME_WIDTH, Math.min(WELCOME_WIDTH, columns));
+}
 
 /** 欢迎界面 Logo 行前缀 */
 export const LOGO_PREFIX = '▐█▛█▛█▌  ';

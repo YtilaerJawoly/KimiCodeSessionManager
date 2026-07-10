@@ -6,9 +6,12 @@ import { getKimiHome } from '../config.js';
 import { getKimiInstalledVersion } from '../kimi-version.js';
 import {
   WELCOME_WIDTH,
+  MIN_WELCOME_WIDTH,
+  getWelcomeWidth,
   LOGO_PREFIX,
   LINE_PREFIX,
   stringWidth,
+  truncate,
   levelColor,
 } from './helpers.js';
 
@@ -47,32 +50,35 @@ export function printWelcome(kimiVersion, messages = [], quota = '', showQuota =
   // 清屏并把光标移到左上角，保证每次进入菜单都是“重绘”而非追加
   process.stdout.write('\x1B[2J\x1B[H');
 
-  const title = t('welcome.title', { version: pkg.version });
+  const width = getWelcomeWidth();
   const leftPad = '  ';
+  const maxTextWidth = width - 2 - stringWidth(leftPad + LOGO_PREFIX);
+
+  const title = truncate(t('welcome.title', { version: pkg.version }), maxTextWidth);
 
   const line = (prefix, text) => {
-    const visibleText = leftPad + prefix + text;
-    const pad = WELCOME_WIDTH - stringWidth(visibleText);
-    return '│' + visibleText + ' '.repeat(Math.max(0, pad)) + '│';
+    const fullText = leftPad + prefix + text;
+    const pad = width - stringWidth(fullText);
+    return '│' + fullText + ' '.repeat(Math.max(0, pad)) + '│';
   };
 
-  const border = '╭' + '─'.repeat(WELCOME_WIDTH) + '╮';
-  const bottom = '╰' + '─'.repeat(WELCOME_WIDTH) + '╯';
+  const border = '╭' + '─'.repeat(width) + '╮';
+  const bottom = '╰' + '─'.repeat(width) + '╯';
   const accent = chalk.hex('#4A90E2');
 
   console.log(accent(border));
-  console.log(accent('│' + ' '.repeat(WELCOME_WIDTH) + '│'));
+  console.log(accent('│' + ' '.repeat(width) + '│'));
   console.log(accent(line(LOGO_PREFIX, title)));
-  console.log(accent(line(LINE_PREFIX, t('welcome.subtitle', { version: kimiVersion || 'unknown' }))));
+  console.log(accent(line(LINE_PREFIX, truncate(t('welcome.subtitle', { version: kimiVersion || 'unknown' }), maxTextWidth))));
 
   if (showQuota) {
     const quotaText = quota
       ? t('welcome.quota', { remaining: quota })
       : t('welcome.quotaUnavailable');
-    console.log(accent(line(LINE_PREFIX, quotaText)));
+    console.log(accent(line(LINE_PREFIX, truncate(quotaText, maxTextWidth))));
   }
 
-  console.log(accent('│' + ' '.repeat(WELCOME_WIDTH) + '│'));
+  console.log(accent('│' + ' '.repeat(width) + '│'));
   console.log(accent(bottom));
 
   for (const msg of messages.slice(0, 5)) {
