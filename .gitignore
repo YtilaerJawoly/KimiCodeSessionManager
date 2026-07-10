@@ -5,3 +5,4 @@ node_modules/
 .understand-anything/
 *.tmp
 workspace/
+start.exe
