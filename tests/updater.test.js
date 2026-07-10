@@ -118,4 +118,15 @@ describe('updater', () => {
     assert.equal(result.latest, '');
     assert.equal(result.hasUpdate, false);
   });
+
+  it('checkKsmVersion forces HTTP/1.1 for git ls-remote', async () => {
+    let captured;
+    const spawn = (cmd, args, options) => {
+      captured = options;
+      return makeMockSpawn({ code: 0, stdout: '' })();
+    };
+    await checkKsmVersion('/any/dir', spawn);
+    assert.equal(captured.env.GIT_HTTP_VERSION, 'HTTP/1.1');
+    assert.equal(captured.cwd, '/any/dir');
+  });
 });
