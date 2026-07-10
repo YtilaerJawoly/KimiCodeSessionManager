@@ -5,12 +5,18 @@
 ## 安装
 
 ```bash
+npm install -g kimi-session-manager
+```
+
+或手动克隆安装：
+
+```bash
 git clone https://github.com/YtilaerJawoly/KimiCodeSessionManager.git
 cd KimiCodeSessionManager
 npm install -g .
 ```
 
-Windows 用户也可以直接双击 `start.exe`。
+Windows 用户也可以直接双击 `start.exe`，或运行 `./start.ps1`。
 
 ## 使用
 
