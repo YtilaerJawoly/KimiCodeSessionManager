@@ -5,12 +5,18 @@ Manage and quickly resume [Kimi Code](https://code.kimi.com/) sessions by projec
 ## Install
 
 ```bash
+npm install -g kimi-session-manager
+```
+
+Or clone and install manually:
+
+```bash
 git clone https://github.com/YtilaerJawoly/KimiCodeSessionManager.git
 cd KimiCodeSessionManager
 npm install -g .
 ```
 
-On Windows, you can also double-click `start.exe`.
+On Windows, you can also double-click `start.exe` or run `./start.ps1`.
 
 ## Usage
 
