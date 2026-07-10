@@ -8,6 +8,7 @@ Repository: https://github.com/YtilaerJawoly/KimiCodeSessionManager
 
 ## Features
 
+- **Quick start**: Lists the 5 most recent sessions directly on the main menu for one-click resume.
 - **Project-based session grouping**: Automatically scans `~/.kimi-code/sessions` and groups sessions that share the same working directory.
 - **One-click resume**: “Continue latest session” is highlighted by default after entering a project.
 - **Browse and search history**: View all historical sessions within a project, with fuzzy search by project name or path.
